@@ -5,7 +5,8 @@ import { format, addWeeks, subWeeks, startOfWeek, endOfWeek } from 'date-fns';
 const AttendancePage = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
+  //mock data
+  // In a real application, you would fetch this data from an API
   const attendanceRecords = [
     {
       id: 1,

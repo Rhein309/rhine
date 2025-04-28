@@ -28,10 +28,28 @@ const AddCoursePage = () => {
     setCourseData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  //   const handleDateChange = (date: Date) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Course data:', courseData);
+    try {
+      // Simulate API call or form submission
+      const response = await fetch('http://localhost:9999/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(courseData),
+      });
+
+      if (response.ok) {
+        console.log('Course added successfully');
+        window.location.href = '/admin/courses'; // Redirect to courses page
+      } else {
+        console.error('Failed to add course');
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
   };
 
   return (

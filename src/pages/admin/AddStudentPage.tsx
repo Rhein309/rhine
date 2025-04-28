@@ -46,10 +46,28 @@ const AddStudentPage = () => {
     setStudentData(prev => ({ ...prev, courses: selectedOptions }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Student data:', studentData);
+    try {
+      // Simulate API call or form submission
+      const response = await fetch('http://localhost:9999/students', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(studentData),
+      });
+
+      if (response.ok) {
+        console.log('Student added successfully');
+        // redirect
+        window.location.href = '/admin/students';
+      } else {
+        console.error('Failed to add student');
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
   };
 
   return (
