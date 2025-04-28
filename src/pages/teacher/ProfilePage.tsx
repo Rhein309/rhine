@@ -34,26 +34,7 @@ const TeacherProfilePage = () => {
     e.preventDefault();
     if (window.confirm('Are you sure you want to save these changes?')) {
       if (window.confirm('Please confirm again to save your profile changes.')) {
-        try {
-          const response = await fetch('http://localhost:9999/profile', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(editData),
-          });
-
-          if (response.ok) {
-            console.log('Profile updated successfully');
-            window.alert('Profile updated successfully!');
-          } else {
-            console.error('Failed to update profile');
-            window.alert('Failed to update profile. Please try again.');
-          }
-        } catch (error) {
-          console.error('An error occurred:', error);
-          window.alert('An error occurred while updating the profile.');
-        }
+        // Handle save logic here
         console.log('Saving profile changes:', editData);
         setShowEditModal(false);
       }
