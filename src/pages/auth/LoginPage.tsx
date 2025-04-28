@@ -115,7 +115,7 @@ const LoginPage = () => {
             />
           </div>
 
-          {isDemoEmail && (
+          {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select User Type
@@ -156,7 +156,7 @@ const LoginPage = () => {
                 </button>
               </div>
             </div>
-          )}
+          }
 
           <div>
             <button
