@@ -17,49 +17,49 @@ const LoginPage = () => {
     setError('');
     setLoading(true);
 
-    try {
-      //form
-      const { profile } = await signIn(email, password, userType);
-      
-      // Redirect based on user type
-      switch (profile.user_type) {
-        case 'admin':
-          window.location.href = '/admin';
-          break;
-        case 'teacher':
-          window.location.href = '/teacher';
-          break;
-        case 'parent':
-          window.location.href = '/parent';
-          break;
-      }
-    } catch (err) {
-      setError('Invalid email or password');
-      setLoading(false);
-    }
-  };
-    //   try {
+  //   try {
   //     //form
   //     const { profile } = await signIn(email, password, userType);
       
   //     // Redirect based on user type
-  //     const response = await fetch('http://localhost:9999/login', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ userType, email, password }),
-  //     });
-  //     if (response.ok) {
-  //       console.log('login successful');
-  //     } else {
-  //       console.error('login failed');
+  //     switch (profile.user_type) {
+  //       case 'admin':
+  //         window.location.href = '/admin';
+  //         break;
+  //       case 'teacher':
+  //         window.location.href = '/teacher';
+  //         break;
+  //       case 'parent':
+  //         window.location.href = '/parent';
+  //         break;
   //     }
-  //   }  catch (err) {
+  //   } catch (err) {
   //     setError('Invalid email or password');
   //     setLoading(false);
   //   }
   // };
+      try {
+      //form
+      const { profile } = await signIn(email, password, userType);
+      
+      // Redirect based on user type
+      const response = await fetch('http://localhost:9999/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userType, email, password }),
+      });
+      if (response.ok) {
+        console.log('login successful');
+      } else {
+        console.error('login failed');
+      }
+    }  catch (err) {
+      setError('Invalid email or password');
+      setLoading(false);
+    }
+  };
 
 
 //demo email
