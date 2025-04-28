@@ -13,7 +13,7 @@ export interface Profile {
 // Mock users for testing
 const mockUsers = {
   'skkaur2003@gmail.com': {
-    password: 'Sk@24681379',
+    password: 'Sk@',
     profiles: {
       teacher: {
         id: '123',
