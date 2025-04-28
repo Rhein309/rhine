@@ -14,34 +14,7 @@ const LoginPage = () => {
   //submit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-  //   try {
-  //     //form
-  //     const { profile } = await signIn(email, password, userType);
-      
-  //     // Redirect based on user type
-  //     switch (profile.user_type) {
-  //       case 'admin':
-  //         window.location.href = '/admin';
-  //         break;
-  //       case 'teacher':
-  //         window.location.href = '/teacher';
-  //         break;
-  //       case 'parent':
-  //         window.location.href = '/parent';
-  //         break;
-  //     }
-  //   } catch (err) {
-  //     setError('Invalid email or password');
-  //     setLoading(false);
-  //   }
-  // };
       try {
-      //form
-      const { profile } = await signIn(email, password, userType);
-      
       // Redirect based on user type
       const response = await fetch('http://localhost:9999/login', {
         method: 'POST',
@@ -50,7 +23,14 @@ const LoginPage = () => {
         },
         body: JSON.stringify({ userType, email, password }),
       });
-      if (response.ok) {
+      if (response.status === 200) {
+        console.log('login successful');
+        const redirectPaths: Record<UserType, string> = {
+          teacher: '/teacher',
+          parent: '/parent',
+          admin: '/admin',
+        };
+        window.location.href = redirectPaths[userType];
         console.log('login successful');
       } else {
         console.error('login failed');

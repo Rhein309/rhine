@@ -35,7 +35,7 @@ const SignupPage = () => {
         },
         body: JSON.stringify({ userType, formData }),
       });
-      if (response.ok) {
+      if (response.status === 200) {
         console.log('Signup successful');
         window.location.href = '/login';
       } else {
