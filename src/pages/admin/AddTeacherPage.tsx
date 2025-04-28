@@ -40,10 +40,27 @@ const AddTeacherPage = () => {
     setTeacherData(prev => ({ ...prev, courses: selectedOptions }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Teacher data:', teacherData);
+    try {
+      // Simulate API call or form submission
+      const response = await fetch('http://localhost:9999/teachers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(teacherData),
+      });
+
+      if (response.ok) {
+        console.log('Teacher added successfully');
+        window.location.href = '/admin/teachers'; // Redirect to teachers page
+      } else {
+        console.error('Failed to add teacher');
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
   };
 
   return (
