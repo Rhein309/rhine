@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, AlertCircle } from 'lucide-react';
 
 type UserType = 'parent' | 'teacher';
 
 const SignupPage = () => {
   const [userType, setUserType] = useState<UserType>('parent');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -27,6 +29,15 @@ const SignupPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    // 验证密码
+    if (formData.password !== formData.confirmPassword) {
+      setError('密码和确认密码不匹配');
+      setLoading(false);
+      return;
+    }
     
     try {
       const response = await fetch('http://localhost:9999/signup', {
@@ -36,14 +47,21 @@ const SignupPage = () => {
         },
         body: JSON.stringify({ userType, formData }),
       });
-      if (response.ok) {
-        console.log('Signup successful');
+      
+      if (response.status === 200) {
+        console.log('注册成功');
+        // 注册成功后重定向到登录页面
         window.location.href = '/login';
       } else {
-        console.error('Signup failed');
+        const errorData = await response.json();
+        console.error('注册失败:', errorData);
+        setError(errorData.error || '注册失败，请稍后重试');
+        setLoading(false);
       }
     } catch (error) {
-      console.error('Signup failed:', error);
+      console.error('注册过程中出错:', error);
+      setError('连接错误，请稍后重试');
+      setLoading(false);
     }
   };
 
@@ -85,6 +103,12 @@ const SignupPage = () => {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+                <AlertCircle className="w-5 h-5" />
+                <span>{error}</span>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -220,9 +244,10 @@ const SignupPage = () => {
 
             <button
               type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign up
+              {loading ? '注册中...' : '注册'}
             </button>
           </form>
 

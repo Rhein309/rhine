@@ -12,38 +12,13 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  //submit function
+  // 提交登录表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-  //   try {
-  //     //form
-  //     const { profile } = await signIn(email, password, userType);
-      
-  //     // Redirect based on user type
-  //     switch (profile.user_type) {
-  //       case 'admin':
-  //         window.location.href = '/admin';
-  //         break;
-  //       case 'teacher':
-  //         window.location.href = '/teacher';
-  //         break;
-  //       case 'parent':
-  //         window.location.href = '/parent';
-  //         break;
-  //     }
-  //   } catch (err) {
-  //     setError('Invalid email or password');
-  //     setLoading(false);
-  //   }
-  // };
-      try {
-      //form
-      const { profile } = await signIn(email, password, userType);
-      
-      // Redirect based on user type
+    try {
+      // 使用后端API进行身份验证
       const response = await fetch('http://localhost:9999/login', {
         method: 'POST',
         headers: {
@@ -51,13 +26,48 @@ const LoginPage = () => {
         },
         body: JSON.stringify({ userType, email, password }),
       });
-      if (response.ok) {
-        console.log('login successful');
+      
+      if (response.status === 200) {
+        const data = await response.json();
+        console.log('Login successful:', data);
+        
+        // 创建与 AuthContext 期望格式一致的用户数据
+        const userData = {
+          email: data.user.email,
+          profile: {
+            id: data.user.id.toString(),
+            user_type: data.user.userType,
+            first_name: data.user.firstName,
+            last_name: data.user.lastName,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+        };
+        
+        // 将用户数据存储到 localStorage 中，以便 AuthContext 可以读取
+        localStorage.setItem('user', JSON.stringify(userData));
+        
+        // 重定向到相应的页面
+        switch (data.user.userType) {
+          case 'admin':
+            window.location.href = '/admin';
+            break;
+          case 'teacher':
+            window.location.href = '/teacher';
+            break;
+          case 'parent':
+            window.location.href = '/parent';
+            break;
+        }
       } else {
-        console.error('login failed');
+        const errorData = await response.json();
+        console.error('Login failed:', errorData);
+        setError(errorData.error || 'Invalid email or password');
+        setLoading(false);
       }
-    }  catch (err) {
-      setError('Invalid email or password');
+    } catch (err) {
+      console.error('Error during login:', err);
+      setError('Connection error. Please try again.');
       setLoading(false);
     }
   };
@@ -125,8 +135,8 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => setUserType('teacher')}
                   className={`flex-1 py-2 px-4 text-sm font-medium ${userType === 'teacher'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-700 hover:text-purple-600 border border-gray-300'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 hover:text-purple-600 border border-gray-300'
                     } rounded-l-md`}
                 >
                   Teacher
@@ -135,8 +145,8 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => setUserType('parent')}
                   className={`flex-1 py-2 px-4 text-sm font-medium ${userType === 'parent'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-700 hover:text-purple-600 border-y border-gray-300'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 hover:text-purple-600 border-y border-gray-300'
                     }`}
                 >
                   Parent
@@ -145,8 +155,8 @@ const LoginPage = () => {
                   type="button"
                   onClick={() => setUserType('admin')}
                   className={`flex-1 py-2 px-4 text-sm font-medium ${userType === 'admin'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-700 hover:text-purple-600 border border-gray-300'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white text-gray-700 hover:text-purple-600 border border-gray-300'
                     } rounded-r-md`}
                 >
                   Admin
