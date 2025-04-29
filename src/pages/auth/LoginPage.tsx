@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+
+type UserType = 'teacher' | 'parent' | 'admin';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, AlertCircle } from 'lucide-react';
-import { signIn, UserType } from '../../lib/supabase';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -14,36 +15,27 @@ const LoginPage = () => {
   //submit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-      try {
-      // Redirect based on user type
-      const response = await fetch('http://localhost:9999/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userType, email, password }),
-      });
-      if (response.status === 200) {
-        console.log('login successful');
-        const redirectPaths: Record<UserType, string> = {
-          teacher: '/teacher',
-          parent: '/parent',
-          admin: '/admin',
-        };
-        window.location.href = redirectPaths[userType];
-        console.log('login successful');
-      } else {
-        console.error('login failed');
-      }
-    }  catch (err) {
+    setLoading(true);
+    setError('');
+
+    try {
+      // 使用 supabase 的 signIn 函数进行登录
+      const { signIn } = await import('../../lib/supabase');
+      await signIn(email, password, userType);
+      
+      // 登录成功后，AuthContext 会自动从 localStorage 读取用户信息
+      // 并通过 PrivateRoute 重定向到相应页面，不需要手动重定向
+      console.log('Login successful');
+      
+    } catch (err) {
+      console.error('Login failed:', err);
       setError('Invalid email or password');
       setLoading(false);
     }
   };
 
 
-//demo email
-  const isDemoEmail = email === 'skkaur2003@gmail.com';
+  //demo email
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -104,33 +96,30 @@ const LoginPage = () => {
                 <button
                   type="button"
                   onClick={() => setUserType('teacher')}
-                  className={`flex-1 py-2 px-4 text-sm font-medium ${
-                    userType === 'teacher'
+                  className={`flex-1 py-2 px-4 text-sm font-medium ${userType === 'teacher'
                       ? 'bg-purple-600 text-white'
                       : 'bg-white text-gray-700 hover:text-purple-600 border border-gray-300'
-                  } rounded-l-md`}
+                    } rounded-l-md`}
                 >
                   Teacher
                 </button>
                 <button
                   type="button"
                   onClick={() => setUserType('parent')}
-                  className={`flex-1 py-2 px-4 text-sm font-medium ${
-                    userType === 'parent'
+                  className={`flex-1 py-2 px-4 text-sm font-medium ${userType === 'parent'
                       ? 'bg-purple-600 text-white'
                       : 'bg-white text-gray-700 hover:text-purple-600 border-y border-gray-300'
-                  }`}
+                    }`}
                 >
                   Parent
                 </button>
                 <button
                   type="button"
                   onClick={() => setUserType('admin')}
-                  className={`flex-1 py-2 px-4 text-sm font-medium ${
-                    userType === 'admin'
+                  className={`flex-1 py-2 px-4 text-sm font-medium ${userType === 'admin'
                       ? 'bg-purple-600 text-white'
                       : 'bg-white text-gray-700 hover:text-purple-600 border border-gray-300'
-                  } rounded-r-md`}
+                    } rounded-r-md`}
                 >
                   Admin
                 </button>

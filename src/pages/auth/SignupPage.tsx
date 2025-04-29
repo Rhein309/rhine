@@ -27,22 +27,24 @@ const SignupPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
-      const response = await fetch('http://localhost:9999/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userType, formData }),
-      });
-      if (response.status === 200) {
-        console.log('Signup successful');
-        window.location.href = '/login';
-      } else {
-        console.error('Signup failed');
-      }
+      // 使用 supabase 的 signUp 函数进行注册
+      const { signUp } = await import('../../lib/supabase');
+      
+      await signUp(
+        formData.email,
+        formData.password,
+        userType,
+        formData.firstName,
+        formData.lastName
+      );
+      
+      console.log('Signup successful');
+      // 使用 React Router 的导航方式
+      window.location.href = '/login';
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Signup failed:', error);
     }
   };
 
