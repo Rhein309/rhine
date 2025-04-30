@@ -49,7 +49,7 @@ const AddStudentPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Simulate API call or form submission
+      // 发送学生数据到后端API
       const response = await fetch('http://localhost:9999/students', {
         method: 'POST',
         headers: {
@@ -58,15 +58,21 @@ const AddStudentPage = () => {
         body: JSON.stringify(studentData),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        console.log('Student added successfully');
-        // redirect
+        console.log('学生添加成功:', result.message);
+        alert('学生添加成功！');
+        // 添加成功后重定向到学生列表页面
         window.location.href = '/admin/students';
       } else {
-        console.error('Failed to add student');
+        // 显示错误信息
+        console.error('添加学生失败:', result.error);
+        alert(`添加学生失败: ${result.error}`);
       }
     } catch (error) {
-      console.error('An error occurred:', error);
+      console.error('发生错误:', error);
+      alert(`发生错误: ${error instanceof Error ? error.message : '未知错误'}`);
     }
   };
 
