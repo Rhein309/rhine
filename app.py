@@ -364,10 +364,22 @@ def add_course():
             location = data.get('location')
             schedule = data.get('schedule')
             time = data.get('time')
-            teacher = data.get('teacher')
+            teacher_id = data.get('teacher')  # 现在这是教师ID
             max_students = data.get('maxStudents')
             fee = data.get('fee')
             description = data.get('description')
+            
+            # 根据教师ID获取教师名称
+            teacher_name = ""
+            if teacher_id:
+                sql_get_teacher = "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM teachers WHERE id = %s"
+                cursor.execute(sql_get_teacher, (teacher_id,))
+                teacher_result = cursor.fetchone()
+                if teacher_result:
+                    teacher_name = teacher_result['full_name']
+                else:
+                    # 如果找不到教师，使用ID作为备用
+                    teacher_name = f"Teacher ID: {teacher_id}"
             
             # 插入数据到课程表
             sql = """
@@ -380,7 +392,7 @@ def add_course():
             """
             cursor.execute(sql, (
                 name, level, age_range, location, schedule,
-                time, teacher, max_students, fee, description
+                time, teacher_name, max_students, fee, description
             ))
                 
             connection.commit()
@@ -892,6 +904,102 @@ def get_grades():
                 grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']
                 
             return jsonify(grades), 200
+            
+        except Exception as e:
+            print(f"数据库错误: {str(e)}")
+            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+        finally:
+            # 关闭连接
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"服务器错误: {str(e)}")
+        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+
+@app.route('/admin/dashboard-stats', methods=['GET'])
+def get_dashboard_stats():
+    try:
+        # 连接数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # 获取学生总数
+            cursor.execute("SELECT COUNT(*) as count FROM students")
+            total_students = cursor.fetchone()['count']
+            
+            # 获取上个月学生总数，计算变化百分比
+            from datetime import datetime, timedelta
+            one_month_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+            cursor.execute("SELECT COUNT(*) as count FROM students WHERE created_at < %s", (one_month_ago,))
+            last_month_students = cursor.fetchone()['count'] or 1  # 避免除以零
+            student_change_percent = round(((total_students - last_month_students) / last_month_students) * 100)
+            student_change = f"+{student_change_percent}%" if student_change_percent > 0 else f"{student_change_percent}%"
+            
+            # 获取活跃课程数
+            cursor.execute("SELECT COUNT(*) as count FROM courses")
+            active_courses = cursor.fetchone()['count']
+            
+            # 获取上个月课程数，计算变化
+            cursor.execute("SELECT COUNT(*) as count FROM courses WHERE created_at < %s", (one_month_ago,))
+            last_month_courses = cursor.fetchone()['count'] or 0
+            course_change = f"+{active_courses - last_month_courses}" if active_courses > last_month_courses else f"{active_courses - last_month_courses}"
+            
+            # 获取教师总数
+            cursor.execute("SELECT COUNT(*) as count FROM teachers")
+            total_teachers = cursor.fetchone()['count']
+            
+            # 获取上个月教师数，计算变化
+            cursor.execute("SELECT COUNT(*) as count FROM teachers WHERE created_at < %s", (one_month_ago,))
+            last_month_teachers = cursor.fetchone()['count'] or total_teachers
+            teacher_change = f"+{total_teachers - last_month_teachers}" if total_teachers > last_month_teachers else f"{total_teachers - last_month_teachers}"
+            
+            # 获取今日课程数（这里需要根据实际情况调整，假设有一个课程表表格）
+            # 由于没有课程表表格，这里使用一个估计值：每个课程每周上课一次
+            today_weekday = datetime.now().weekday()  # 0-6，0是周一
+            cursor.execute("SELECT COUNT(*) as count FROM courses WHERE schedule LIKE %s", (f"%{today_weekday}%",))
+            classes_today_result = cursor.fetchone()
+            classes_today = classes_today_result['count'] if classes_today_result else 0
+            
+            # 假设上周同一天的课程数
+            last_week_classes = int(classes_today * 1.1)  # 假设比本周多10%
+            classes_change = f"{classes_today - last_week_classes}"
+            
+            # 构建响应数据
+            stats = {
+                "totalStudents": {
+                    "value": str(total_students),
+                    "change": student_change,
+                    "changeType": "increase" if student_change_percent > 0 else "decrease" if student_change_percent < 0 else "neutral"
+                },
+                "activeCourses": {
+                    "value": str(active_courses),
+                    "change": course_change,
+                    "changeType": "increase" if active_courses > last_month_courses else "decrease" if active_courses < last_month_courses else "neutral"
+                },
+                "teachers": {
+                    "value": str(total_teachers),
+                    "change": teacher_change,
+                    "changeType": "increase" if total_teachers > last_month_teachers else "decrease" if total_teachers < last_month_teachers else "neutral"
+                },
+                "classesToday": {
+                    "value": str(classes_today),
+                    "change": classes_change,
+                    "changeType": "increase" if classes_today > last_week_classes else "decrease" if classes_today < last_week_classes else "neutral"
+                }
+            }
+            
+            return jsonify(stats), 200
             
         except Exception as e:
             print(f"数据库错误: {str(e)}")

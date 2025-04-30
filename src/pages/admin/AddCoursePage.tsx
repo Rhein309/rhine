@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Save } from 'lucide-react';
 
 const AddCoursePage = () => {
@@ -14,14 +14,55 @@ const AddCoursePage = () => {
     fee: '',
     description: ''
   });
+  const [teachers, setTeachers] = useState<{id: number, name: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const locations = [
-    { id: 'tsw', name: 'Tsz Wan Shan Centre' },
-    { id: 'tko', name: 'Tseung Kwan O Centre' }
-  ];
+  // 从API获取位置数据
+  const [locations, setLocations] = useState<{id: string, name: string}[]>([]);
+  
+  useEffect(() => {
+    // 获取教师数据
+    const fetchTeachers = async () => {
+      try {
+        const response = await fetch('http://localhost:9999/teachers');
+        if (response.ok) {
+          const data = await response.json();
+          // 将教师数据转换为需要的格式
+          const formattedTeachers = data.map((teacher: any) => ({
+            id: teacher.id,
+            name: teacher.name
+          }));
+          setTeachers(formattedTeachers);
+        } else {
+          console.error('Failed to fetch teachers');
+        }
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+      }
+    };
+
+    // 获取位置数据
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch('http://localhost:9999/locations');
+        if (response.ok) {
+          const data = await response.json();
+          setLocations(data);
+        } else {
+          console.error('Failed to fetch locations');
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTeachers();
+    fetchLocations();
+  }, []);
 
   const levels = ['Beginner', 'Intermediate', 'Advanced'];
-  const teachers = ['Sarah Lee', 'John Smith', 'Emily Chen'];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -181,11 +222,12 @@ const AddCoursePage = () => {
                   value={courseData.teacher}
                   onChange={handleChange}
                   required
+                  disabled={isLoading}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 >
                   <option value="">Select Teacher</option>
                   {teachers.map(teacher => (
-                    <option key={teacher} value={teacher}>{teacher}</option>
+                    <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
                   ))}
                 </select>
               </div>
