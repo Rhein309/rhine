@@ -1,6 +1,31 @@
-import React, { useState } from 'react';
-import { Search, GraduationCap, MapPin, BookOpen, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, GraduationCap, MapPin, BookOpen, Calendar, AlertCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import axios from 'axios';
+
+// 定义数据类型
+interface Student {
+  id: number;
+  name: string;
+  age: number;
+  grade: string;
+  location: string;
+  courses: string[];
+  parent: string;
+  contact: string;
+  joinDate: string;
+  status: string;
+}
+
+interface Location {
+  id: string;
+  name: string;
+}
+
+interface Course {
+  id: string;
+  name: string;
+}
 
 const StudentsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -9,45 +34,74 @@ const StudentsPage = () => {
   const [selectedGrade, setSelectedGrade] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  
+  // 状态管理
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [grades, setGrades] = useState<string[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const locations = [
-    { id: 'tsw', name: 'Tsz Wan Shan Centre' },
-    { id: 'tko', name: 'Tseung Kwan O Centre' }
-  ];
+  // API URL
+  const API_URL = 'http://localhost:9999';
 
-  const courses = [
-    { id: 'phonics', name: 'Phonics Foundation' },
-    { id: 'readers', name: 'Young Readers' }
-  ];
+  // 获取所有数据
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // 并行获取所有数据
+        const [studentsRes, locationsRes, coursesRes, gradesRes] = await Promise.all([
+          axios.get(`${API_URL}/students`),
+          axios.get(`${API_URL}/locations`),
+          axios.get(`${API_URL}/course-names`),
+          axios.get(`${API_URL}/grades`)
+        ]);
+        
+        setStudents(studentsRes.data);
+        setLocations(locationsRes.data);
+        setCourses(coursesRes.data);
+        setGrades(gradesRes.data);
+      } catch (err) {
+        console.error('获取数据失败:', err);
+        setError('获取数据失败，请检查服务器连接');
+        
+        // 如果API调用失败，使用默认数据
+        setLocations([
+          { id: 'tsw', name: 'Tsz Wan Shan Centre' },
+          { id: 'tko', name: 'Tseung Kwan O Centre' }
+        ]);
+        setCourses([
+          { id: 'phonics', name: 'Phonics Foundation' },
+          { id: 'readers', name: 'Young Readers' }
+        ]);
+        setGrades(['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
-  const grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6'];
-
-  const students = [
-    {
-      id: 1,
-      name: 'Emily Wong',
-      age: 7,
-      grade: 'Grade 2',
-      location: 'Tsz Wan Shan Centre',
-      courses: ['Phonics Foundation', 'Young Readers'],
-      parent: 'Sarah Wong',
-      contact: '+852 9876 5432',
-      joinDate: '2025-01-01',
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'Thomas Chan',
-      age: 6,
-      grade: 'Grade 1',
-      location: 'Tseung Kwan O Centre',
-      courses: ['Phonics Foundation'],
-      parent: 'David Chan',
-      contact: '+852 9876 1234',
-      joinDate: '2025-01-05',
-      status: 'active'
+  // 删除学生
+  const handleDeleteStudent = async (studentId: number) => {
+    if (window.confirm('确定要删除这名学生吗？此操作无法撤销。')) {
+      if (window.confirm('请再次确认删除此学生。所有相关数据将被永久删除。')) {
+        try {
+          await axios.delete(`${API_URL}/students/${studentId}`);
+          // 删除成功后更新学生列表
+          setStudents(students.filter(student => student.id !== studentId));
+        } catch (err) {
+          console.error('删除学生失败:', err);
+          alert('删除学生失败，请稍后再试');
+        }
+      }
     }
-  ];
+  };
 
   const filteredStudents = students.filter(student => {
     const matchesLocation = selectedLocation === 'all' || student.location === locations.find(l => l.id === selectedLocation)?.name;
@@ -64,6 +118,26 @@ const StudentsPage = () => {
 
     return matchesLocation && matchesCourse && matchesGrade && matchesSearch && matchesStartDate && matchesEndDate;
   });
+
+  // 显示加载状态或错误信息
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          <span>{error}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -227,14 +301,7 @@ const StudentsPage = () => {
                     View Details
                   </button>
                   <button 
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
-                        if (window.confirm('Please confirm again that you want to delete this student. All associated data will be permanently removed.')) {
-                          // Handle delete logic here
-                          console.log('Delete student:', student.id);
-                        }
-                      }
-                    }}
+                    onClick={() => handleDeleteStudent(student.id)}
                     className="text-red-600 hover:text-red-900"
                   >
                     Delete

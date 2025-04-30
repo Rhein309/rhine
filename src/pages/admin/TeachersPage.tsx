@@ -1,6 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Users, MapPin, BookOpen, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+
+interface Teacher {
+  id: number;
+  name: string;
+  location: string;
+  courses: string[];
+  experience: string;
+  qualifications: string[];
+  contact: string;
+  joinDate: string;
+  status: string;
+}
+
+interface Location {
+  id: string;
+  name: string;
+}
+
+interface Course {
+  id: string;
+  name: string;
+}
 
 const TeachersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -8,45 +30,70 @@ const TeachersPage = () => {
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const locations = [
-    { id: 'tsw', name: 'Tsz Wan Shan Centre' },
-    { id: 'tko', name: 'Tseung Kwan O Centre' }
-  ];
+  useEffect(() => {
+    // 获取位置数据
+    fetch('http://localhost:9999/locations')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('获取位置数据失败');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setLocations(data);
+      })
+      .catch(err => {
+        console.error('获取位置数据错误:', err);
+        setError('获取位置数据失败');
+      });
 
-  const courses = [
-    { id: 'phonics', name: 'Phonics Foundation' },
-    { id: 'readers', name: 'Young Readers' }
-  ];
+    // 获取课程数据
+    fetch('http://localhost:9999/course-names')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('获取课程数据失败');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setCourses(data);
+      })
+      .catch(err => {
+        console.error('获取课程数据错误:', err);
+        setError('获取课程数据失败');
+      });
 
-  const teachers = [
-    {
-      id: 1,
-      name: 'Sarah Lee',
-      location: 'Tsz Wan Shan Centre',
-      courses: ['Phonics Foundation', 'Young Readers'],
-      experience: '5 years',
-      qualifications: ['TEFL Certified', 'B.Ed in English'],
-      contact: '+852 9876 5432',
-      joinDate: '2024-01-01',
-      status: 'active'
-    },
-    {
-      id: 2,
-      name: 'John Smith',
-      location: 'Tseung Kwan O Centre',
-      courses: ['Young Readers'],
-      experience: '3 years',
-      qualifications: ['CELTA', 'M.Ed'],
-      contact: '+852 9876 1234',
-      joinDate: '2024-02-01',
-      status: 'active'
-    }
-  ];
+    // 获取教师数据
+    fetch('http://localhost:9999/teachers')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('获取教师数据失败');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setTeachers(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('获取教师数据错误:', err);
+        setError('获取教师数据失败');
+        setLoading(false);
+      });
+  }, []);
 
   const filteredTeachers = teachers.filter(teacher => {
     const matchesLocation = selectedLocation === 'all' || teacher.location === locations.find(l => l.id === selectedLocation)?.name;
-    const matchesCourse = selectedCourse === 'all' || teacher.courses.includes(courses.find(c => c.id === selectedCourse)?.name || '');
+    const matchesCourse = selectedCourse === 'all' || teacher.courses.some(course =>
+      courses.find(c => c.id === selectedCourse)?.name === course
+    );
     const matchesSearch = 
       teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       teacher.qualifications.some(q => q.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -63,7 +110,7 @@ const TeachersPage = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Teachers</h1>
-        <button 
+        <button
           onClick={() => window.location.href = '/admin/teachers/new'}
           className="flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
         >
@@ -72,6 +119,20 @@ const TeachersPage = () => {
         </button>
       </div>
 
+      {/* 错误提示 */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* 加载状态 */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        </div>
+      ) : (
+      <>
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -214,8 +275,24 @@ const TeachersPage = () => {
                 onClick={() => {
                   if (window.confirm('Are you sure you want to delete this teacher? This action cannot be undone.')) {
                     if (window.confirm('Please confirm again that you want to delete this teacher. All associated data will be permanently removed.')) {
-                      // Handle delete logic here
-                      console.log('Delete teacher:', teacher.id);
+                      // 调用删除教师的API
+                      fetch(`http://localhost:9999/teachers/${teacher.id}`, {
+                        method: 'DELETE',
+                      })
+                        .then(response => {
+                          if (!response.ok) {
+                            throw new Error('删除教师失败');
+                          }
+                          return response.json();
+                        })
+                        .then(() => {
+                          // 删除成功后，更新教师列表
+                          setTeachers(teachers.filter(t => t.id !== teacher.id));
+                        })
+                        .catch(err => {
+                          console.error('删除教师错误:', err);
+                          alert('删除教师失败，请稍后再试');
+                        });
                     }
                   }
                 }}
@@ -227,6 +304,8 @@ const TeachersPage = () => {
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 };
