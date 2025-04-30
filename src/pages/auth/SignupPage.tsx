@@ -32,12 +32,7 @@ const SignupPage = () => {
     setError('');
     setLoading(true);
     
-    // 验证密码
-    if (formData.password !== formData.confirmPassword) {
-      setError('密码和确认密码不匹配');
-      setLoading(false);
-      return;
-    }
+
     
     try {
       const response = await fetch('http://localhost:9999/signup', {
