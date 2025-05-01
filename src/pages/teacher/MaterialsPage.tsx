@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Search, FileText, FileSpreadsheet, FileImage, Download, Upload, Plus, X, Save, Trash2 } from 'lucide-react';
 import { getAllMaterials, uploadMaterial, uploadFile, downloadFile, deleteMaterial, Material } from '../../lib/materialService';
 
@@ -9,6 +10,9 @@ const MaterialsPage = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const [courses, setCourses] = useState<{id: string | number, name: string}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [uploadData, setUploadData] = useState({
     title: '',
     courseId: '',
@@ -18,11 +22,6 @@ const MaterialsPage = () => {
     file: null as File | null,
     notes: ''
   });
-
-  const courses = [
-    { id: 'phonics', name: 'Phonics Foundation' },
-    { id: 'readers', name: 'Young Readers' }
-  ];
 
   const students = [
     { id: '1', name: 'Emily Wong' },
@@ -35,19 +34,43 @@ const MaterialsPage = () => {
     name: `Week ${i + 1}`
   }));
 
-  // 加载所有课程资料
+  // 加载所有课程和课程资料
   useEffect(() => {
-    const loadMaterials = async () => {
+    const loadData = async () => {
+      setLoading(true);
       try {
-        const data = await getAllMaterials();
-        setMaterials(data);
+        // 加载课程资料
+        const materialsData = await getAllMaterials();
+        setMaterials(materialsData);
+        
+        // 加载课程数据
+        try {
+          const response = await axios.get('http://localhost:9999/courses');
+          // 转换课程数据格式
+          const formattedCourses = response.data.map((course: any) => ({
+            id: course.id,
+            name: course.name
+          }));
+          setCourses(formattedCourses);
+        } catch (err) {
+          console.error('获取课程数据失败:', err);
+          // 如果API调用失败，使用默认数据
+          setCourses([
+            { id: 'phonics', name: 'Phonics Foundation' },
+            { id: 'readers', name: 'Young Readers' }
+          ]);
+        }
+        
+        setError(null);
       } catch (error) {
         console.error('Failed to load materials:', error);
-        alert('加载课程资料失败');
+        setError('加载课程资料失败');
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadMaterials();
+    loadData();
   }, []);
 
   const getTypeIcon = (type: string) => {
@@ -164,7 +187,7 @@ const MaterialsPage = () => {
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Course Materials</h1>
-        <button 
+        <button
           onClick={() => setShowUploadModal(true)}
           className="flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
         >
@@ -173,71 +196,81 @@ const MaterialsPage = () => {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <select
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-          >
-            <option value="all">All Courses</option>
-            {courses.map(course => (
-              <option key={course.id} value={course.id}>{course.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedStudent}
-            onChange={(e) => setSelectedStudent(e.target.value)}
-            className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-          >
-            <option value="all">All Students</option>
-            {students.map(student => (
-              <option key={student.id} value={student.id}>{student.name}</option>
-            ))}
-          </select>
-
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search materials..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pl-10"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          </div>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
         </div>
-      </div>
+      ) : error ? (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <p>{error}</p>
+        </div>
+      ) : (
+        <>
+          {/* Filters */}
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <select
+                value={selectedCourse}
+                onChange={(e) => setSelectedCourse(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              >
+                <option value="all">All Courses</option>
+                {courses.map(course => (
+                  <option key={course.id} value={course.id}>{course.name}</option>
+                ))}
+              </select>
 
-      {/* Materials List */}
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="divide-y divide-gray-200">
-          {filteredMaterials.length > 0 ? (
-            filteredMaterials.map((material) => (
-              <div key={material.id} className="p-6 hover:bg-gray-50">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4">
-                    <div className="text-gray-400">
+              <select
+                value={selectedStudent}
+                onChange={(e) => setSelectedStudent(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+              >
+                <option value="all">All Students</option>
+                {students.map(student => (
+                  <option key={student.id} value={student.id}>{student.name}</option>
+                ))}
+              </select>
+
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search materials..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pl-10"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              </div>
+            </div>
+          </div>
+
+          {/* Materials List */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div className="divide-y divide-gray-200">
+              {filteredMaterials.length > 0 ? (
+                filteredMaterials.map((material) => (
+              <div key={material.id} className="p-6 hover:bg-gray-50 w-full overflow-hidden">
+                <div className="flex items-start justify-between w-full">
+                  <div className="flex items-start space-x-4 min-w-0 flex-1">
+                    <div className="text-gray-400 flex-shrink-0">
                       {getTypeIcon(material.type)}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{material.title}</h3>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-lg font-medium text-gray-900 truncate">{material.title}</h3>
                       <div className="mt-1 space-y-1">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 truncate">
                           {courses.find(c => c.id === material.courseId)?.name}
                         </p>
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                          <span>上传日期: {material.uploadDate}</span>
-                          <span>文件大小: {material.fileSize}</span>
-                          <span>分配给: {material.assignedTo}</span>
-                          <span>周次: {material.week.replace('week-', '周')}</span>
+                          <span className="whitespace-nowrap">上传日期: {material.uploadDate}</span>
+                          <span className="whitespace-nowrap">文件大小: {material.fileSize}</span>
+                          <span className="whitespace-nowrap">分配给: {material.assignedTo}</span>
+                          <span className="whitespace-nowrap">周次: {material.week.replace('week-', '周')}</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-4 flex-shrink-0 ml-4">
                     <button
                       onClick={() => handleDownload(material)}
                       className="text-blue-500 hover:text-blue-600"
@@ -260,9 +293,11 @@ const MaterialsPage = () => {
             <div className="p-8 text-center text-gray-500">
               没有找到符合条件的课程资料
             </div>
-          )}
-        </div>
-      </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Upload Modal */}
       {showUploadModal && (
@@ -306,9 +341,13 @@ const MaterialsPage = () => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 >
                   <option value="">选择课程</option>
-                  {courses.map(course => (
-                    <option key={course.id} value={course.id}>{course.name}</option>
-                  ))}
+                  {courses.length > 0 ? (
+                    courses.map(course => (
+                      <option key={course.id} value={course.id}>{course.name}</option>
+                    ))
+                  ) : (
+                    <option value="" disabled>加载课程中...</option>
+                  )}
                 </select>
               </div>
 
