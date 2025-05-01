@@ -1099,6 +1099,74 @@ def enroll_course():
         print(f"服务器错误: {str(e)}")
         return jsonify({"error": f"服务器错误: {str(e)}"}), 500
 
+@app.route('/user-enrollments', methods=['GET'])
+def get_user_enrollments():
+    try:
+        # 获取请求参数
+        parent_id = request.args.get('parentId')
+        
+        if not parent_id:
+            return jsonify({"error": "缺少parentId参数"}), 400
+            
+        # 连接数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # 查询用户报名的课程
+            sql = """
+            SELECT c.*, e.enrollment_date, e.status as enrollment_status
+            FROM enrollments e
+            JOIN courses c ON e.course_id = c.id
+            WHERE e.parent_id = %s AND e.status = 'active'
+            """
+            cursor.execute(sql, (parent_id,))
+            enrollments = cursor.fetchall()
+            
+            # 格式化结果
+            formatted_enrollments = []
+            for enrollment in enrollments:
+                # 安全处理时间格式
+                time_parts = enrollment['time'].split('-') if '-' in enrollment['time'] else ['00:00', '00:00']
+                start_time = time_parts[0].strip() if len(time_parts) > 0 else '00:00'
+                end_time = time_parts[1].strip() if len(time_parts) > 1 else '01:00'
+                
+                formatted_enrollments.append({
+                    'id': str(enrollment['id']),
+                    'title': enrollment['name'],
+                    'start': f"2025-01-16T{start_time}:00",  # 使用课程时间创建事件开始时间
+                    'end': f"2025-01-16T{end_time}:00",    # 使用课程时间创建事件结束时间
+                    'extendedProps': {
+                        'location': enrollment['location'],
+                        'teacher': enrollment['teacher'],
+                        'zoomLink': 'https://zoom.us/j/123456789' if 'Online' in enrollment['location'] else None,
+                        'courseId': str(enrollment['id'])
+                    }
+                })
+            
+            return jsonify(formatted_enrollments), 200
+            
+        except Exception as e:
+            print(f"数据库错误: {str(e)}")
+            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+        finally:
+            # 关闭连接
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"服务器错误: {str(e)}")
+        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+
 if __name__ == '__main__':
     # 初始化数据库表
     init_db()

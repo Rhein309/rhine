@@ -46,6 +46,7 @@ const ParentCoursesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [enrolling, setEnrolling] = useState(false);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<number[]>([]);
   const [confirmDialog, setConfirmDialog] = useState<{
     show: boolean;
     courseId: number | null;
@@ -103,6 +104,33 @@ const ParentCoursesPage = () => {
 
     fetchCourses();
   }, []);
+
+  // 获取用户已报名的课程
+  useEffect(() => {
+    const fetchEnrolledCourses = async () => {
+      if (!profile || !profile.id) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:9999/user-enrollments?parentId=${profile.id}`);
+        
+        if (!response.ok) {
+          console.error(`获取报名数据失败: ${response.status}`);
+          return;
+        }
+        
+        const data = await response.json();
+        // 提取已报名课程的ID
+        const enrolledIds = data.map((enrollment: any) => Number(enrollment.extendedProps.courseId));
+        setEnrolledCourseIds(enrolledIds);
+      } catch (err: any) {
+        console.error('获取报名数据时出错:', err);
+      }
+    };
+
+    fetchEnrolledCourses();
+  }, [profile]);
 
   // 显示确认对话框
   const showEnrollConfirm = (courseId: number, courseName: string) => {
@@ -169,6 +197,9 @@ const ParentCoursesPage = () => {
         status: 'success',
         message: '报名成功！'
       });
+      
+      // 更新已报名课程列表
+      setEnrolledCourseIds(prev => [...prev, courseId]);
     } catch (err: any) {
       console.error('报名课程时出错:', err);
       setEnrollmentStatus({
@@ -299,13 +330,22 @@ const ParentCoursesPage = () => {
                             {enrollmentStatus.message}
                           </p>
                         )}
-                        <button
-                          className={`bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200 ${enrolling && enrollmentStatus.courseId === course.id ? 'opacity-75 cursor-not-allowed' : ''}`}
-                          onClick={() => showEnrollConfirm(course.id, course.name)}
-                          disabled={enrolling && enrollmentStatus.courseId === course.id}
-                        >
-                          {enrolling && enrollmentStatus.courseId === course.id ? '报名中...' : '立即报名'}
-                        </button>
+                        {enrolledCourseIds.includes(course.id) ? (
+                          <button
+                            className="bg-green-600 text-white px-4 py-2 rounded-md cursor-default"
+                            disabled
+                          >
+                            已报名
+                          </button>
+                        ) : (
+                          <button
+                            className={`bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200 ${enrolling && enrollmentStatus.courseId === course.id ? 'opacity-75 cursor-not-allowed' : ''}`}
+                            onClick={() => showEnrollConfirm(course.id, course.name)}
+                            disabled={enrolling && enrollmentStatus.courseId === course.id}
+                          >
+                            {enrolling && enrollmentStatus.courseId === course.id ? '报名中...' : '立即报名'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
