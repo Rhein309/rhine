@@ -44,18 +44,18 @@ const SignupPage = () => {
       });
       
       if (response.status === 200) {
-        console.log('注册成功');
+        console.log('Registration successful');
         // 注册成功后重定向到登录页面
         window.location.href = '/login';
       } else {
         const errorData = await response.json();
-        console.error('注册失败:', errorData);
-        setError(errorData.error || '注册失败，请稍后重试');
+        console.error('Registration failed:', errorData);
+        setError(errorData.error || 'Registration failed, please try again later');
         setLoading(false);
       }
     } catch (error) {
-      console.error('注册过程中出错:', error);
-      setError('连接错误，请稍后重试');
+      console.error('Error during registration:', error);
+      setError('Connection error, please try again later');
       setLoading(false);
     }
   };
@@ -242,7 +242,7 @@ const SignupPage = () => {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? '注册中...' : '注册'}
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </form>
 
