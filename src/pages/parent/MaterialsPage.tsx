@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, FileText, FileSpreadsheet, FileImage, Download } from 'lucide-react';
 import { getAllMaterials, downloadFile, Material } from '../../lib/materialService';
 
-// 定义API返回的课程数据类型
+// API Course type definition
 interface ApiCourse {
   id: number;
   name: string;
@@ -19,7 +19,7 @@ interface ApiCourse {
   description?: string;
 }
 
-// 定义组件使用的课程数据类型
+// Component Course type definition
 interface Course {
   id: number;
   name: string;
@@ -47,7 +47,7 @@ const MaterialsPage = () => {
     name: `Week ${i + 1}`
   }));
 
-  // 加载课程数据
+  // Load course data
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -55,21 +55,21 @@ const MaterialsPage = () => {
         const response = await fetch('http://localhost:9999/courses');
         
         if (!response.ok) {
-          throw new Error(`获取课程数据失败: ${response.status}`);
+          throw new Error(`Failed to fetch course data: ${response.status}`);
         }
         
         const data = await response.json() as ApiCourse[];
         
-        // 将API返回的数据格式转换为组件需要的格式
+        // Format API data for component
         const formattedCourses = data.map((course: ApiCourse) => ({
-          id: course.id.toString(), // 转换为字符串以匹配Material中的courseId类型
+          id: course.id.toString(),
           name: course.name
         }));
         
         setCourses(formattedCourses);
       } catch (err: any) {
-        console.error('获取课程数据时出错:', err);
-        // 如果API获取失败，使用默认课程数据
+        console.error('Error fetching course data:', err);
+        // Use default courses if API fails
         setCourses([
           { id: 'phonics', name: 'Phonics Foundation' },
           { id: 'readers', name: 'Young Readers' }
@@ -82,7 +82,7 @@ const MaterialsPage = () => {
     fetchCourses();
   }, []);
 
-  // 加载所有课程资料
+  // Load all materials
   useEffect(() => {
     const loadMaterials = async () => {
       try {
@@ -91,7 +91,7 @@ const MaterialsPage = () => {
         setMaterials(data);
       } catch (error) {
         console.error('Failed to load materials:', error);
-        alert('加载课程资料失败');
+        alert('Failed to load materials');
       } finally {
         setIsLoading(false);
       }
@@ -100,7 +100,7 @@ const MaterialsPage = () => {
     loadMaterials();
   }, []);
 
-  // 获取文件图标
+  // Get file icon
   const getFileIcon = (format: string) => {
     switch (format.toLowerCase()) {
       case 'pdf':
@@ -119,13 +119,13 @@ const MaterialsPage = () => {
     }
   };
 
-  // 处理资料下载
+  // Handle material download
   const handleDownload = async (material: Material) => {
     try {
       await downloadFile(material.filePath, `${material.title}.${material.format}`);
     } catch (error) {
       console.error('Download failed:', error);
-      alert('下载失败，请重试');
+      alert('Download failed, please try again');
     }
   };
 
@@ -151,7 +151,7 @@ const MaterialsPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">课程资料</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Course Materials</h1>
 
       <div className="bg-white rounded-lg shadow-sm p-6">
         {/* Filters */}
@@ -162,7 +162,7 @@ const MaterialsPage = () => {
             className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
             disabled={coursesLoading}
           >
-            <option value="all">所有课程</option>
+            <option value="all">All Courses</option>
             {courses.map(course => (
               <option key={course.id} value={course.id}>{course.name}</option>
             ))}
@@ -173,7 +173,7 @@ const MaterialsPage = () => {
             onChange={(e) => setSelectedWeek(e.target.value)}
             className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
           >
-            <option value="all">所有周次</option>
+            <option value="all">All Weeks</option>
             {weeks.map(week => (
               <option key={week.id} value={week.id}>{week.name}</option>
             ))}
@@ -182,7 +182,7 @@ const MaterialsPage = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="搜索资料..."
+              placeholder="Search materials..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pl-10"
@@ -195,7 +195,7 @@ const MaterialsPage = () => {
         {isLoading || coursesLoading ? (
           <div className="py-10 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-            <p className="mt-2 text-gray-500">加载中...</p>
+            <p className="mt-2 text-gray-500">Loading...</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -216,10 +216,10 @@ const MaterialsPage = () => {
                             {courses.find(c => c.id === material.courseId)?.name || material.courseId}
                           </span>
                           <span className="text-sm text-gray-500">
-                            上传者: {material.teacher} | 日期: {material.uploadDate}
+                            Uploader: {material.teacher} | Date: {material.uploadDate}
                           </span>
                           <span className="text-sm text-gray-500">
-                            {material.week.replace('week-', '第') + '周'}
+                            {material.week.replace('week-', 'Week ')}
                           </span>
                         </div>
                       </div>
@@ -229,14 +229,14 @@ const MaterialsPage = () => {
                       className="flex items-center text-purple-600 hover:text-purple-700"
                     >
                       <Download className="w-4 h-4 mr-1" />
-                      下载
+                      Download
                     </button>
                   </div>
                 );
               })
             ) : (
               <div className="py-10 text-center text-gray-500">
-                没有找到符合条件的课程资料
+                No course materials found
               </div>
             )}
           </div>

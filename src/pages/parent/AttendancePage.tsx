@@ -60,7 +60,7 @@ const AttendancePage = () => {
               location: 'Online',
               leavingTime: '16:00',
               status: 'present',
-              notes: '课堂表现积极'
+              notes: 'Active participation'
             },
             {
               id: 2,
@@ -71,7 +71,7 @@ const AttendancePage = () => {
               location: 'Tsz Wan Shan Centre',
               leavingTime: '15:00',
               status: 'present',
-              notes: '完成了所有阅读任务'
+              notes: 'Completed all reading tasks'
             },
             {
               id: 3,
@@ -82,7 +82,7 @@ const AttendancePage = () => {
               location: 'Online',
               leavingTime: '16:00',
               status: 'absent',
-              notes: '生病请假'
+              notes: 'Sick leave'
             },
             {
               id: 4,
@@ -93,7 +93,7 @@ const AttendancePage = () => {
               location: 'Tsz Wan Shan Centre',
               leavingTime: '15:00',
               status: 'late',
-              notes: '迟到10分钟，交通拥堵'
+              notes: 'Late by 10 minutes, traffic jam'
             },
             {
               id: 5,
@@ -104,7 +104,7 @@ const AttendancePage = () => {
               location: 'Online',
               leavingTime: '16:00',
               status: 'present',
-              notes: '完成了所有作业'
+              notes: 'Completed all homework'
             },
             {
               id: 6,
@@ -115,7 +115,7 @@ const AttendancePage = () => {
               location: 'Tsz Wan Shan Centre',
               leavingTime: '15:00',
               status: 'present',
-              notes: '阅读能力有所提高'
+              notes: 'Reading skills improved'
             },
             {
               id: 7,
@@ -126,7 +126,7 @@ const AttendancePage = () => {
               location: 'Online',
               leavingTime: '16:00',
               status: 'present',
-              notes: '积极参与课堂讨论'
+              notes: 'Actively participated in class discussion'
             },
             {
               id: 8,
@@ -137,7 +137,7 @@ const AttendancePage = () => {
               location: 'Tsz Wan Shan Centre',
               leavingTime: '15:00',
               status: 'late',
-              notes: '迟到5分钟'
+              notes: 'Late by 5 minutes'
             }
           ];
           
@@ -152,8 +152,8 @@ const AttendancePage = () => {
           
           setError(null);
         } catch (err) {
-          console.error('获取数据失败:', err);
-          setError('获取数据失败，请稍后再试');
+          console.error('Failed to fetch data:', err);
+          setError('Failed to fetch data, please try again later');
         }
       } finally {
         setLoading(false);
@@ -236,7 +236,7 @@ const AttendancePage = () => {
 
   const handleExportAttendance = () => {
     // 创建CSV内容
-    const headers = ['日期', '时间', '课程', '教师', '地点', '离开时间', '状态', '备注'];
+    const headers = ['Date', 'Time', 'Course', 'Teacher', 'Location', 'Leaving Time', 'Status', 'Notes'];
     const rows = filteredRecords.map(record => [
       record.date,
       record.time,
@@ -244,7 +244,7 @@ const AttendancePage = () => {
       record.teacher,
       record.location,
       record.leavingTime,
-      record.status === 'present' ? '出席' : record.status === 'late' ? '迟到' : '缺席',
+      record.status === 'present' ? 'Present' : record.status === 'late' ? 'Late' : 'Absent',
       record.notes || ''
     ]);
     
@@ -258,7 +258,7 @@ const AttendancePage = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `出勤记录_${format(weekStart, 'yyyyMMdd')}_${format(weekEnd, 'yyyyMMdd')}.csv`);
+    link.setAttribute('download', `Attendance_${format(weekStart, 'yyyyMMdd')}_${format(weekEnd, 'yyyyMMdd')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -267,21 +267,21 @@ const AttendancePage = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">出勤记录</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Attendance Records</h1>
         <div className="flex space-x-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors duration-200 flex items-center"
           >
             <Filter className="w-4 h-4 mr-2" />
-            筛选
+            Filter
           </button>
           <button
             onClick={handleExportAttendance}
             className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors duration-200 flex items-center"
           >
             <Download className="w-4 h-4 mr-2" />
-            导出记录
+            Export Records
           </button>
         </div>
       </div>
@@ -303,20 +303,20 @@ const AttendancePage = () => {
         </div>
       ) : (
         <>
-          {/* 出勤率统计 */}
+          {/* Attendance Stats */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-gray-900">出勤率统计</h2>
+              <h2 className="text-lg font-medium text-gray-900">Attendance Statistics</h2>
               <div className="flex items-center text-sm text-gray-500">
                 <BarChart2 className="w-4 h-4 mr-1" />
-                总课程数: {attendanceRecords.length}
+                Total Classes: {attendanceRecords.length}
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-green-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-green-800 font-medium">出席</span>
+                  <span className="text-green-800 font-medium">Present</span>
                   <span className="text-green-800 font-bold text-xl">{stats.present}%</span>
                 </div>
                 <div className="w-full bg-green-200 rounded-full h-2.5 mt-2">
@@ -325,7 +325,7 @@ const AttendancePage = () => {
               </div>
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-yellow-800 font-medium">迟到</span>
+                  <span className="text-yellow-800 font-medium">Late</span>
                   <span className="text-yellow-800 font-bold text-xl">{stats.late}%</span>
                 </div>
                 <div className="w-full bg-yellow-200 rounded-full h-2.5 mt-2">
@@ -334,7 +334,7 @@ const AttendancePage = () => {
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-red-800 font-medium">缺席</span>
+                  <span className="text-red-800 font-medium">Absent</span>
                   <span className="text-red-800 font-bold text-xl">{stats.absent}%</span>
                 </div>
                 <div className="w-full bg-red-200 rounded-full h-2.5 mt-2">
@@ -343,9 +343,9 @@ const AttendancePage = () => {
               </div>
             </div>
             
-            {/* 月度趋势图表 */}
+            {/* Monthly Trend Chart */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">月度出勤趋势</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Monthly Attendance Trend</h3>
               <div className="h-48 flex items-end space-x-2">
                 {monthlyStats.map((month, index) => (
                   <div key={index} className="flex-1 flex flex-col items-center">
@@ -355,17 +355,17 @@ const AttendancePage = () => {
                           <div 
                             className="w-full bg-green-500" 
                             style={{ height: `${(month.present / month.total) * 100}%` }}
-                            title={`出席: ${month.present}课`}
+                            title={`Present: ${month.present} classes`}
                           ></div>
                           <div 
                             className="w-full bg-yellow-500" 
                             style={{ height: `${(month.late / month.total) * 100}%` }}
-                            title={`迟到: ${month.late}课`}
+                            title={`Late: ${month.late} classes`}
                           ></div>
                           <div 
                             className="w-full bg-red-500" 
                             style={{ height: `${(month.absent / month.total) * 100}%` }}
-                            title={`缺席: ${month.absent}课`}
+                            title={`Absent: ${month.absent} classes`}
                           ></div>
                         </>
                       )}
@@ -379,34 +379,34 @@ const AttendancePage = () => {
               <div className="flex justify-center mt-2 space-x-4">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-green-500 mr-1"></div>
-                  <span className="text-xs text-gray-600">出席</span>
+                  <span className="text-xs text-gray-600">Present</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-yellow-500 mr-1"></div>
-                  <span className="text-xs text-gray-600">迟到</span>
+                  <span className="text-xs text-gray-600">Late</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-red-500 mr-1"></div>
-                  <span className="text-xs text-gray-600">缺席</span>
+                  <span className="text-xs text-gray-600">Absent</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 筛选器 */}
+          {/* Filters */}
           {showFilters && (
             <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    课程
+                    Course
                   </label>
                   <select
                     value={selectedCourse}
                     onChange={(e) => setSelectedCourse(e.target.value)}
                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   >
-                    <option value="all">所有课程</option>
+                    <option value="all">All Courses</option>
                     {courses.map((course, index) => (
                       <option key={index} value={course}>{course}</option>
                     ))}
@@ -415,23 +415,23 @@ const AttendancePage = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    出勤状态
+                    Attendance Status
                   </label>
                   <select
                     value={selectedStatus}
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   >
-                    <option value="all">所有状态</option>
-                    <option value="present">出席</option>
-                    <option value="late">迟到</option>
-                    <option value="absent">缺席</option>
+                    <option value="all">All Status</option>
+                    <option value="present">Present</option>
+                    <option value="late">Late</option>
+                    <option value="absent">Absent</option>
                   </select>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    日期范围
+                    Date Range
                   </label>
                   <div className="flex items-center space-x-4">
                     <button
@@ -447,7 +447,7 @@ const AttendancePage = () => {
                     >
                       <Calendar className="w-5 h-5 text-gray-600" />
                       <span className="text-gray-900 font-medium">
-                        {format(weekStart, 'yyyy年MM月dd日', { locale: zhCN })} - {format(weekEnd, 'yyyy年MM月dd日', { locale: zhCN })}
+                        {format(weekStart, 'yyyy-MM-dd', { locale: zhCN })} - {format(weekEnd, 'yyyy-MM-dd', { locale: zhCN })}
                       </span>
                     </button>
 
@@ -463,22 +463,22 @@ const AttendancePage = () => {
             </div>
           )}
 
-          {/* 出勤记录 */}
+          {/* Attendance Records */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
             {filteredRecords.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
-                没有找到符合条件的出勤记录
+                No attendance records found
               </div>
             ) : (
               <div>
                 <div className="grid grid-cols-7 gap-4 p-4 bg-gray-50 border-b border-gray-200">
-                  <div className="text-sm font-medium text-gray-500">日期</div>
-                  <div className="text-sm font-medium text-gray-500">时间</div>
-                  <div className="text-sm font-medium text-gray-500">课程</div>
-                  <div className="text-sm font-medium text-gray-500">教师</div>
-                  <div className="text-sm font-medium text-gray-500">地点</div>
-                  <div className="text-sm font-medium text-gray-500">离开时间</div>
-                  <div className="text-sm font-medium text-gray-500">状态</div>
+                  <div className="text-sm font-medium text-gray-500">Date</div>
+                  <div className="text-sm font-medium text-gray-500">Time</div>
+                  <div className="text-sm font-medium text-gray-500">Course</div>
+                  <div className="text-sm font-medium text-gray-500">Teacher</div>
+                  <div className="text-sm font-medium text-gray-500">Location</div>
+                  <div className="text-sm font-medium text-gray-500">Leaving Time</div>
+                  <div className="text-sm font-medium text-gray-500">Status</div>
                 </div>
 
                 <div className="divide-y divide-gray-200">
@@ -508,7 +508,7 @@ const AttendancePage = () => {
                           ) : (
                             <X className="w-3 h-3 mr-1" />
                           )}
-                          {record.status === 'present' ? '出席' : record.status === 'late' ? '迟到' : '缺席'}
+                          {record.status === 'present' ? 'Present' : record.status === 'late' ? 'Late' : 'Absent'}
                         </span>
                       </div>
                     </div>

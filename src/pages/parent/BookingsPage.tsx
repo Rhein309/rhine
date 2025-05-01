@@ -22,19 +22,19 @@ const BookingsPage = () => {
         const response = await fetch(`http://localhost:9999/user-enrollments?parentId=${profile.id}`);
         
         if (!response.ok) {
-          throw new Error(`获取报名数据失败: ${response.status}`);
+          throw new Error(`Failed to fetch enrollment data: ${response.status}`);
         }
         
         const data = await response.json();
         setEvents(data);
         
-        // 如果有课程，默认选中第一个
+        // If there are courses, select the first one by default
         if (data.length > 0) {
           setSelectedEvent(data[0]);
         }
       } catch (err: any) {
-        console.error('获取报名数据时出错:', err);
-        setError(err.message || '未知错误');
+        console.error('Error fetching enrollment data:', err);
+        setError(err.message || 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -47,7 +47,7 @@ const BookingsPage = () => {
     setSelectedEvent(event);
   };
 
-  // 格式化日期和时间的辅助函数
+  // Helper functions to format date and time
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -58,12 +58,12 @@ const BookingsPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">我的课程预订</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">My Bookings</h1>
 
       {loading && (
         <div className="text-center py-10">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
-          <p className="mt-2 text-gray-600">加载课程数据中...</p>
+          <p className="mt-2 text-gray-600">Loading course data...</p>
         </div>
       )}
 
@@ -71,7 +71,7 @@ const BookingsPage = () => {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex items-start">
           <AlertCircle className="w-5 h-5 mr-2 mt-0.5" />
           <div>
-            <p className="font-bold">加载课程数据时出错</p>
+            <p className="font-bold">Error loading course data</p>
             <p>{error}</p>
           </div>
         </div>
@@ -79,9 +79,9 @@ const BookingsPage = () => {
 
       {!loading && !error && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 课程列表 */}
+          {/* Course List */}
           <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">已预订课程</h2>
+            <h2 className="text-xl font-semibold mb-6">Booked Courses</h2>
             
             {events.length > 0 ? (
               <div className="space-y-4">
@@ -98,7 +98,7 @@ const BookingsPage = () => {
                     <div className="flex justify-between items-start">
                       <h3 className="font-medium text-gray-900">{event.title}</h3>
                       <span className="text-sm text-purple-600 font-medium">
-                        {event.extendedProps.location === 'Online' ? '线上课程' : '线下课程'}
+                        {event.extendedProps.location === 'Online' ? 'Online Course' : 'Offline Course'}
                       </span>
                     </div>
                     
@@ -124,13 +124,13 @@ const BookingsPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600">您目前没有预订任何课程</p>
+              <p className="text-gray-600">You have not booked any courses yet</p>
             )}
           </div>
 
-          {/* 课程详情 */}
+          {/* Course Details */}
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-6">课程详情</h2>
+            <h2 className="text-xl font-semibold mb-6">Course Details</h2>
             {selectedEvent ? (
               <div className="space-y-4">
                 <div>
@@ -142,8 +142,8 @@ const BookingsPage = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-gray-600">教师: {selectedEvent.extendedProps.teacher}</p>
-                  <p className="text-gray-600">地点: {selectedEvent.extendedProps.location}</p>
+                  <p className="text-gray-600">Teacher: {selectedEvent.extendedProps.teacher}</p>
+                  <p className="text-gray-600">Location: {selectedEvent.extendedProps.location}</p>
                 </div>
                 {selectedEvent.extendedProps.zoomLink && (
                   <a
@@ -153,18 +153,18 @@ const BookingsPage = () => {
                     className="flex items-center text-purple-600 hover:text-purple-700"
                   >
                     <Video className="w-4 h-4 mr-2" />
-                    加入Zoom会议
+                    Join Zoom Meeting
                   </a>
                 )}
                 <Link
                   to={`/parent/courses#${selectedEvent.extendedProps.courseId}`}
                   className="block text-purple-600 hover:text-purple-700 font-medium"
                 >
-                  查看课程详情
+                  View Course Details
                 </Link>
               </div>
             ) : (
-              <p className="text-gray-600">选择一个课程查看详情</p>
+              <p className="text-gray-600">Select a course to view details</p>
             )}
           </div>
         </div>

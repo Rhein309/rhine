@@ -64,7 +64,7 @@ const MaterialsPage = () => {
         setError(null);
       } catch (error) {
         console.error('Failed to load materials:', error);
-        setError('加载课程资料失败');
+        setError('Failed to load course materials');
       } finally {
         setLoading(false);
       }
@@ -96,12 +96,12 @@ const MaterialsPage = () => {
     e.preventDefault();
     
     if (!uploadData.file) {
-      alert('请选择要上传的文件');
+      alert('Please select a file to upload');
       return;
     }
 
     if (!uploadData.title || !uploadData.courseId) {
-      alert('请填写所有必填字段');
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -142,10 +142,10 @@ const MaterialsPage = () => {
         notes: ''
       });
       
-      alert('课程资料上传成功！');
+      alert('Material uploaded successfully!');
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('上传失败，请重试');
+      alert('Upload failed, please try again');
     } finally {
       setIsUploading(false);
     }
@@ -157,20 +157,20 @@ const MaterialsPage = () => {
       await downloadFile(material.filePath, `${material.title}.${material.format}`);
     } catch (error) {
       console.error('Download failed:', error);
-      alert('下载失败，请重试');
+      alert('Download failed, please try again');
     }
   };
 
   // 处理资料删除
   const handleDelete = async (id: string) => {
-    if (window.confirm('确定要删除这个资料吗？此操作不可撤销。')) {
+    if (window.confirm('Are you sure you want to delete this material? This action cannot be undone.')) {
       try {
         await deleteMaterial(id);
         setMaterials(prev => prev.filter(material => material.id !== id));
-        alert('资料已成功删除');
+        alert('Material deleted successfully');
       } catch (error) {
         console.error('Delete failed:', error);
-        alert('删除失败，请重试');
+        alert('Delete failed, please try again');
       }
     }
   };
@@ -262,10 +262,10 @@ const MaterialsPage = () => {
                           {courses.find(c => c.id === material.courseId)?.name}
                         </p>
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                          <span className="whitespace-nowrap">上传日期: {material.uploadDate}</span>
-                          <span className="whitespace-nowrap">文件大小: {material.fileSize}</span>
-                          <span className="whitespace-nowrap">分配给: {material.assignedTo}</span>
-                          <span className="whitespace-nowrap">周次: {material.week.replace('week-', '周')}</span>
+                          <span className="whitespace-nowrap">Upload Date: {material.uploadDate}</span>
+                          <span className="whitespace-nowrap">File Size: {material.fileSize}</span>
+                          <span className="whitespace-nowrap">Assigned To: {material.assignedTo}</span>
+                          <span className="whitespace-nowrap">Week: {material.week.replace('week-', 'Week ')}</span>
                         </div>
                       </div>
                     </div>
@@ -274,14 +274,14 @@ const MaterialsPage = () => {
                     <button
                       onClick={() => handleDownload(material)}
                       className="text-blue-500 hover:text-blue-600"
-                      title="下载资料"
+                      title="Download Material"
                     >
                       <Download className="w-5 h-5" />
                     </button>
                     <button
                       onClick={() => handleDelete(material.id)}
                       className="text-red-500 hover:text-red-600"
-                      title="删除资料"
+                      title="Delete Material"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -291,7 +291,7 @@ const MaterialsPage = () => {
             ))
           ) : (
             <div className="p-8 text-center text-gray-500">
-              没有找到符合条件的课程资料
+              No course materials found
             </div>
               )}
             </div>
@@ -304,7 +304,7 @@ const MaterialsPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-2xl p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">上传课程资料</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Upload Course Material</h2>
               <button
                 onClick={() => setShowUploadModal(false)}
                 className="text-gray-400 hover:text-gray-500"
@@ -316,7 +316,7 @@ const MaterialsPage = () => {
             <form onSubmit={handleUploadSubmit} className="space-y-6">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-                  资料标题
+                  Material Title
                 </label>
                 <input
                   type="text"
@@ -325,13 +325,13 @@ const MaterialsPage = () => {
                   onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
                   required
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                  placeholder="例如：第一周拼音练习"
+                  placeholder="e.g. Week 1 Phonics Practice"
                 />
               </div>
 
               <div>
                 <label htmlFor="courseId" className="block text-sm font-medium text-gray-700 mb-2">
-                  课程
+                  Course
                 </label>
                 <select
                   id="courseId"
@@ -340,20 +340,20 @@ const MaterialsPage = () => {
                   required
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 >
-                  <option value="">选择课程</option>
+                  <option value="">Select Course</option>
                   {courses.length > 0 ? (
                     courses.map(course => (
                       <option key={course.id} value={course.id}>{course.name}</option>
                     ))
                   ) : (
-                    <option value="" disabled>加载课程中...</option>
+                    <option value="" disabled>Loading courses...</option>
                   )}
                 </select>
               </div>
 
               <div>
                 <label htmlFor="week" className="block text-sm font-medium text-gray-700 mb-2">
-                  课程周次
+                  Week
                 </label>
                 <select
                   id="week"
@@ -370,7 +370,7 @@ const MaterialsPage = () => {
 
               <div>
                 <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-2">
-                  资料类型
+                  Material Type
                 </label>
                 <select
                   id="type"
@@ -379,17 +379,17 @@ const MaterialsPage = () => {
                   required
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 >
-                  <option value="worksheet">练习题</option>
-                  <option value="quiz">测验</option>
-                  <option value="study_material">学习资料</option>
-                  <option value="homework">家庭作业</option>
-                  <option value="notes">课堂笔记</option>
+                  <option value="worksheet">Worksheet</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="study_material">Study Material</option>
+                  <option value="homework">Homework</option>
+                  <option value="notes">Class Notes</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-2">
-                  分配给
+                  Assign To
                 </label>
                 <select
                   id="assignedTo"
@@ -398,7 +398,7 @@ const MaterialsPage = () => {
                   required
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                 >
-                  <option value="All Students">所有学生</option>
+                  <option value="All Students">All Students</option>
                   {students.map(student => (
                     <option key={student.id} value={student.name}>{student.name}</option>
                   ))}
@@ -407,7 +407,7 @@ const MaterialsPage = () => {
 
               <div>
                 <label htmlFor="file" className="block text-sm font-medium text-gray-700 mb-2">
-                  文件
+                  File
                 </label>
                 <input
                   type="file"
@@ -418,13 +418,13 @@ const MaterialsPage = () => {
                   accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png"
                 />
                 <p className="mt-1 text-sm text-gray-500">
-                  支持的格式：PDF, Word, PowerPoint, Excel, 图片
+                  Supported formats: PDF, Word, PowerPoint, Excel, Images
                 </p>
               </div>
 
               <div>
                 <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-                  备注（可选）
+                  Notes (optional)
                 </label>
                 <textarea
                   id="notes"
@@ -432,7 +432,7 @@ const MaterialsPage = () => {
                   onChange={(e) => setUploadData({ ...uploadData, notes: e.target.value })}
                   rows={3}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                  placeholder="添加关于此资料的任何附加信息"
+                  placeholder="Add any additional information about this material"
                 ></textarea>
               </div>
 
@@ -443,7 +443,7 @@ const MaterialsPage = () => {
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-800"
                   disabled={isUploading}
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -453,12 +453,12 @@ const MaterialsPage = () => {
                   {isUploading ? (
                     <>
                       <span className="animate-spin mr-2">⏳</span>
-                      上传中...
+                      Uploading...
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      上传资料
+                      Upload Material
                     </>
                   )}
                 </button>

@@ -133,7 +133,7 @@ const WalletPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">我的钱包</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">My Wallet</h1>
 
       {/* Tabs */}
       <div className="flex space-x-4 mb-6">
@@ -145,7 +145,7 @@ const WalletPage = () => {
               : 'text-gray-600 hover:text-purple-600'
           }`}
         >
-          交易记录
+          Transactions
         </button>
         <button
           onClick={() => setActiveTab('payment-methods')}
@@ -155,7 +155,7 @@ const WalletPage = () => {
               : 'text-gray-600 hover:text-purple-600'
           }`}
         >
-          支付方式
+          Payment Methods
         </button>
         <button
           onClick={() => setActiveTab('coupons')}
@@ -165,7 +165,7 @@ const WalletPage = () => {
               : 'text-gray-600 hover:text-purple-600'
           }`}
         >
-          优惠券
+          Coupons
         </button>
       </div>
 
@@ -175,21 +175,21 @@ const WalletPage = () => {
           {loading && (
             <div className="text-center py-10 bg-white rounded-lg shadow-sm">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
-              <p className="mt-2 text-gray-600">加载交易记录中...</p>
+              <p className="mt-2 text-gray-600">Loading transactions...</p>
             </div>
           )}
 
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-              <p>加载交易记录时出错: {error}</p>
-              <p>请稍后再试或联系管理员。</p>
+              <p>Error loading transactions: {error}</p>
+              <p>Please try again later or contact the administrator.</p>
             </div>
           )}
 
           {!loading && !error && transactions.length === 0 && (
             <div className="text-center py-10 bg-white rounded-lg shadow-sm">
-              <p className="text-gray-600">暂无交易记录。</p>
-              <p className="text-gray-500 mt-2">报名课程后，相关交易将显示在这里。</p>
+              <p className="text-gray-600">No transactions found.</p>
+              <p className="text-gray-500 mt-2">After enrolling in courses, related transactions will be shown here.</p>
             </div>
           )}
 
@@ -229,20 +229,20 @@ const WalletPage = () => {
                           <div className="space-y-2">
                             {transaction.details.items.map((item, index) => (
                               <div key={index} className="flex justify-between text-sm">
-                                <span className="text-gray-600">{item.name}</span>
+                                <span className="text-gray-600">{item.name === '课程费用' ? 'Course Fee' : item.name === '教材费用' ? 'Material Fee' : item.name}</span>
                                 <span className="text-gray-900">HKD {item.amount}</span>
                               </div>
                             ))}
                             <div className="pt-2 border-t border-gray-200">
                               <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">支付方式</span>
+                                <span className="text-gray-600">Payment Method</span>
                                 <span className="text-gray-900">{transaction.details.paymentMethod}</span>
                               </div>
                             </div>
                           </div>
                           <button className="mt-4 flex items-center text-purple-600 hover:text-purple-700 text-sm font-medium">
                             <Download className="w-4 h-4 mr-1" />
-                            下载发票
+                            Download Invoice
                           </button>
                         </div>
                       </div>
@@ -259,9 +259,9 @@ const WalletPage = () => {
       {activeTab === 'payment-methods' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">已保存的支付方式</h2>
+            <h2 className="text-lg font-medium text-gray-900">Saved Payment Methods</h2>
             <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
-              添加新卡
+              Add New Card
             </button>
           </div>
           <div className="bg-white rounded-lg shadow-sm divide-y divide-gray-100">
@@ -294,9 +294,9 @@ const WalletPage = () => {
       {activeTab === 'coupons' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">可用优惠券</h2>
+            <h2 className="text-lg font-medium text-gray-900">Available Coupons</h2>
             <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
-              添加优惠码
+              Add Coupon Code
             </button>
           </div>
           <div className="bg-white rounded-lg shadow-sm divide-y divide-gray-100">
@@ -307,12 +307,12 @@ const WalletPage = () => {
                   <div>
                     <p className="font-medium text-gray-900">{coupon.code}</p>
                     <p className="text-sm text-gray-500">
-                      {coupon.discount} • 有效期至 {coupon.validUntil}
+                      {coupon.discount} • Valid until {coupon.validUntil}
                     </p>
                   </div>
                 </div>
                 <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">
-                  立即使用
+                  Use Now
                 </button>
               </div>
             ))}

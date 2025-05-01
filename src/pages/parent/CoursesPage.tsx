@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Clock, Users, Calendar } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
-// 定义API返回的课程数据类型
+// Define API course data type
 interface ApiCourse {
   id: number;
   name: string;
@@ -19,7 +19,7 @@ interface ApiCourse {
   description?: string;
 }
 
-// 定义组件使用的课程数据类型
+// Define component course data type
 interface Course {
   id: number;
   name: string;
@@ -73,30 +73,30 @@ const ParentCoursesPage = () => {
         const response = await fetch('http://localhost:9999/courses');
         
         if (!response.ok) {
-          throw new Error(`获取课程数据失败: ${response.status}`);
+          throw new Error(`Failed to fetch course data: ${response.status}`);
         }
         
         const data = await response.json() as ApiCourse[];
         
-        // 将API返回的数据格式转换为组件需要的格式
+        // Convert API data to component format
         const formattedCourses = data.map((course: ApiCourse): Course => ({
           id: course.id,
           name: course.name,
-          // 根据location判断课程类型（在线/线下）
+          // Determine course type by location (online/offline)
           type: course.location.toLowerCase().includes('online') ? 'online' : 'offline',
           ageRange: course.ageRange,
           description: course.description || `${course.name} - ${course.level} level course for ages ${course.ageRange}`,
           schedule: course.schedule,
           time: course.time,
           maxStudents: course.maxStudents,
-          duration: "12 weeks", // 假设所有课程都是12周
+          duration: "12 weeks", // Assume all courses are 12 weeks
           fee: course.fee
         }));
         
         setCourses(formattedCourses);
       } catch (err: any) {
-        console.error('获取课程数据时出错:', err);
-        setError(err.message || '未知错误');
+        console.error('Error fetching course data:', err);
+        setError(err.message || 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -105,7 +105,7 @@ const ParentCoursesPage = () => {
     fetchCourses();
   }, []);
 
-  // 获取用户已报名的课程
+  // Fetch enrolled courses for user
   useEffect(() => {
     const fetchEnrolledCourses = async () => {
       if (!profile || !profile.id) {
@@ -116,23 +116,23 @@ const ParentCoursesPage = () => {
         const response = await fetch(`http://localhost:9999/user-enrollments?parentId=${profile.id}`);
         
         if (!response.ok) {
-          console.error(`获取报名数据失败: ${response.status}`);
+          console.error(`Failed to fetch enrollment data: ${response.status}`);
           return;
         }
         
         const data = await response.json();
-        // 提取已报名课程的ID
+        // Extract enrolled course IDs
         const enrolledIds = data.map((enrollment: any) => Number(enrollment.extendedProps.courseId));
         setEnrolledCourseIds(enrolledIds);
       } catch (err: any) {
-        console.error('获取报名数据时出错:', err);
+        console.error('Error fetching enrollment data:', err);
       }
     };
 
     fetchEnrolledCourses();
   }, [profile]);
 
-  // 显示确认对话框
+  // Show confirm dialog
   const showEnrollConfirm = (courseId: number, courseName: string) => {
     setConfirmDialog({
       show: true,
@@ -141,7 +141,7 @@ const ParentCoursesPage = () => {
     });
   };
 
-  // 关闭确认对话框
+  // Close confirm dialog
   const closeConfirmDialog = () => {
     setConfirmDialog({
       show: false,
@@ -150,7 +150,7 @@ const ParentCoursesPage = () => {
     });
   };
 
-  // 处理课程报名
+  // Handle course enrollment
   const handleEnroll = async () => {
     if (!confirmDialog.courseId) return;
     
@@ -160,7 +160,7 @@ const ParentCoursesPage = () => {
       setEnrollmentStatus({
         courseId,
         status: 'error',
-        message: '请先登录'
+        message: 'Please log in first'
       });
       closeConfirmDialog();
       return;
@@ -174,7 +174,7 @@ const ParentCoursesPage = () => {
         message: ''
       });
 
-      // 发送报名请求
+      // Send enrollment request
       const response = await fetch('http://localhost:9999/enroll', {
         method: 'POST',
         headers: {
@@ -188,24 +188,24 @@ const ParentCoursesPage = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || '报名失败');
+        throw new Error(errorData.error || 'Enrollment failed');
       }
 
-      // 报名成功
+      // Enrollment success
       setEnrollmentStatus({
         courseId,
         status: 'success',
-        message: '报名成功！'
+        message: 'Enrollment successful!'
       });
       
-      // 更新已报名课程列表
+      // Update enrolled course list
       setEnrolledCourseIds(prev => [...prev, courseId]);
     } catch (err: any) {
-      console.error('报名课程时出错:', err);
+      console.error('Error enrolling course:', err);
       setEnrollmentStatus({
         courseId,
         status: 'error',
-        message: err.message || '报名失败，请稍后再试'
+        message: err.message || 'Enrollment failed, please try again later'
       });
     } finally {
       setEnrolling(false);
@@ -222,19 +222,19 @@ const ParentCoursesPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold text-center mb-12">课程列表</h1>
+      <h1 className="text-4xl font-bold text-center mb-12">Course List</h1>
 
       {loading && (
         <div className="text-center py-10">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
-          <p className="mt-2 text-gray-600">加载课程数据中...</p>
+          <p className="mt-2 text-gray-600">Loading courses...</p>
         </div>
       )}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-          <p>加载课程数据时出错: {error}</p>
-          <p>请稍后再试或联系管理员。</p>
+          <p>Error loading courses: {error}</p>
+          <p>Please try again later or contact the administrator.</p>
         </div>
       )}
 
@@ -244,39 +244,39 @@ const ParentCoursesPage = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">年龄段</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Age Range</label>
                 <select
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   value={filters.age}
                   onChange={(e) => setFilters(prev => ({ ...prev, age: e.target.value }))}
                 >
-                  <option value="">所有年龄</option>
-                  <option value="3">3-5岁</option>
-                  <option value="5">5-7岁</option>
-                  <option value="7">7-9岁</option>
-                  <option value="9">9-12岁</option>
+                  <option value="">All Ages</option>
+                  <option value="3">3-5 years</option>
+                  <option value="5">5-7 years</option>
+                  <option value="7">7-9 years</option>
+                  <option value="9">9-12 years</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">课程类型</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Course Type</label>
                 <select
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   value={filters.type}
                   onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
                 >
-                  <option value="all">所有类型</option>
-                  <option value="online">线上</option>
-                  <option value="offline">线下</option>
+                  <option value="all">All Types</option>
+                  <option value="online">Online</option>
+                  <option value="offline">Offline</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">搜索</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="搜索课程..."
+                    placeholder="Search courses..."
                     className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pl-10"
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
@@ -298,7 +298,7 @@ const ParentCoursesPage = () => {
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         course.type === 'online' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {course.type === 'online' ? '线上' : '线下'}
+                        {course.type === 'online' ? 'Online' : 'Offline'}
                       </span>
                     </div>
                     
@@ -307,7 +307,7 @@ const ParentCoursesPage = () => {
                     <div className="space-y-3 mb-6">
                       <div className="flex items-center text-gray-600">
                         <Users className="w-4 h-4 mr-2" />
-                        <span>最多 {course.maxStudents} 名学生</span>
+                        <span>Up to {course.maxStudents} students</span>
                       </div>
                       <div className="flex items-center text-gray-600">
                         <Calendar className="w-4 h-4 mr-2" />
@@ -321,7 +321,7 @@ const ParentCoursesPage = () => {
                     
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div>
-                        <p className="text-gray-600">课程费用</p>
+                        <p className="text-gray-600">Course Fee</p>
                         <p className="text-xl font-bold text-purple-600">{course.fee}</p>
                       </div>
                       <div>
@@ -335,7 +335,7 @@ const ParentCoursesPage = () => {
                             className="bg-green-600 text-white px-4 py-2 rounded-md cursor-default"
                             disabled
                           >
-                            已报名
+                            Enrolled
                           </button>
                         ) : (
                           <button
@@ -343,7 +343,7 @@ const ParentCoursesPage = () => {
                             onClick={() => showEnrollConfirm(course.id, course.name)}
                             disabled={enrolling && enrollmentStatus.courseId === course.id}
                           >
-                            {enrolling && enrollmentStatus.courseId === course.id ? '报名中...' : '立即报名'}
+                            {enrolling && enrollmentStatus.courseId === course.id ? 'Enrolling...' : 'Enroll Now'}
                           </button>
                         )}
                       </div>
@@ -354,29 +354,29 @@ const ParentCoursesPage = () => {
             </div>
           ) : (
             <div className="text-center py-10">
-              <p className="text-gray-600">没有找到符合条件的课程。</p>
+              <p className="text-gray-600">No courses found.</p>
             </div>
           )}
         </>
       )}
-      {/* 确认对话框 */}
+      {/* Confirm Dialog */}
       {confirmDialog.show && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">确认报名</h3>
-            <p className="mb-6">确定要为您的孩子报名"{confirmDialog.courseName}"课程吗？</p>
+            <h3 className="text-xl font-bold mb-4">Confirm Enrollment</h3>
+            <p className="mb-6">Are you sure you want to enroll your child in the "{confirmDialog.courseName}" course?</p>
             <div className="flex justify-end space-x-4">
               <button
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100"
                 onClick={closeConfirmDialog}
               >
-                取消
+                Cancel
               </button>
               <button
                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
                 onClick={handleEnroll}
               >
-                确认报名
+                Confirm
               </button>
             </div>
           </div>

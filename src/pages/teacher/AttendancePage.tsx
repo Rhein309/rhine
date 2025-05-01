@@ -221,13 +221,13 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">记录出勤</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Take Attendance</h1>
         <button
           onClick={onCancel}
           className="text-gray-600 hover:text-gray-800"
           disabled={submitting}
         >
-          返回记录
+          Back to Records
         </button>
       </div>
 
@@ -253,7 +253,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  选择课程
+                  Select Course
                 </label>
                 <select
                   value={selectedClass?.id || ''}
@@ -280,7 +280,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   disabled={submitting}
                 >
-                  <option value="">选择课程</option>
+                  <option value="">Select Course</option>
                   {classes.map(class_ => (
                     <option key={class_.id} value={class_.id}>{class_.course}</option>
                   ))}
@@ -289,7 +289,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  选择日期
+                  Select Date
                 </label>
                 <input
                   type="date"
@@ -310,7 +310,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             <h2 className="text-lg font-medium text-gray-900">
               {selectedClass.course} • {selectedClass.schedule} • {selectedClass.time}
             </h2>
-            <p className="text-sm text-gray-500">地点: {selectedClass.location}</p>
+            <p className="text-sm text-gray-500">Location: {selectedClass.location}</p>
           </div>
           
           <div className="space-y-6">
@@ -320,7 +320,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                   <div className="mb-4 md:mb-0">
                     <h3 className="text-lg font-medium text-gray-900">{student.name}</h3>
                     {student.parent && (
-                      <p className="text-sm text-gray-500">家长: {student.parent}</p>
+                      <p className="text-sm text-gray-500">Parent: {student.parent}</p>
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -334,7 +334,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                       disabled={submitting}
                     >
                       <Check className="w-4 h-4 inline-block mr-1" />
-                      出席
+                      Present
                     </button>
                     <button
                       onClick={() => handleStatusChange(student.id.toString(), 'late')}
@@ -346,7 +346,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                       disabled={submitting}
                     >
                       <Clock className="w-4 h-4 inline-block mr-1" />
-                      迟到
+                      Late
                     </button>
                     <button
                       onClick={() => handleStatusChange(student.id.toString(), 'absent')}
@@ -358,7 +358,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                       disabled={submitting}
                     >
                       <X className="w-4 h-4 inline-block mr-1" />
-                      缺席
+                      Absent
                     </button>
                   </div>
                 </div>
@@ -367,7 +367,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        到达时间
+                        Arrival Time
                       </label>
                       <input
                         type="time"
@@ -379,7 +379,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        离开时间
+                        Leaving Time
                       </label>
                       <input
                         type="time"
@@ -394,7 +394,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                 
                 <input
                   type="text"
-                  placeholder="添加备注（可选）"
+                  placeholder="Add notes (optional)"
                   value={attendanceData[student.id]?.notes || ''}
                   onChange={(e) => handleNotesChange(student.id.toString(), e.target.value)}
                   className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
@@ -413,10 +413,10 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
               {submitting ? (
                 <span className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
-                  提交中...
+                  Submitting...
                 </span>
               ) : (
-                '提交出勤记录'
+                'Submit Attendance'
               )}
             </button>
           </div>
@@ -633,20 +633,20 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">出勤记录</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Attendance Records</h1>
         <div className="flex space-x-4">
           <button
             onClick={handleExportAttendance}
             className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-md transition-colors duration-200 flex items-center"
           >
             <Download className="w-4 h-4 mr-2" />
-            导出记录
+            Export Records
           </button>
           <button
             onClick={onTakeAttendance}
             className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
           >
-            记录出勤
+            Take Attendance
           </button>
         </div>
       </div>
@@ -670,11 +670,11 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
         <>
           {/* 出勤率统计 */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">出勤率统计</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Attendance Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-green-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-green-800 font-medium">出席</span>
+                  <span className="text-green-800 font-medium">Present</span>
                   <span className="text-green-800 font-bold text-xl">{stats.present}%</span>
                 </div>
                 <div className="w-full bg-green-200 rounded-full h-2.5 mt-2">
@@ -683,7 +683,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               </div>
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-yellow-800 font-medium">迟到</span>
+                  <span className="text-yellow-800 font-medium">Late</span>
                   <span className="text-yellow-800 font-bold text-xl">{stats.late}%</span>
                 </div>
                 <div className="w-full bg-yellow-200 rounded-full h-2.5 mt-2">
@@ -692,7 +692,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               </div>
               <div className="bg-red-50 p-4 rounded-lg">
                 <div className="flex items-center justify-between">
-                  <span className="text-red-800 font-medium">缺席</span>
+                  <span className="text-red-800 font-medium">Absent</span>
                   <span className="text-red-800 font-bold text-xl">{stats.absent}%</span>
                 </div>
                 <div className="w-full bg-red-200 rounded-full h-2.5 mt-2">
@@ -710,7 +710,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
                 onChange={(e) => setSelectedCourse(e.target.value)}
                 className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               >
-                <option value="all">所有课程</option>
+                <option value="all">All Courses</option>
                 {courses.map(course => (
                   <option key={course.id} value={course.id}>{course.name}</option>
                 ))}
@@ -721,7 +721,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
                 onChange={(e) => setSelectedStudent(e.target.value)}
                 className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               >
-                <option value="all">所有学生</option>
+                <option value="all">All Students</option>
                 {students.map(student => (
                   <option key={student.id} value={student.id}>{student.name}</option>
                 ))}
@@ -732,10 +732,10 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
               >
-                <option value="all">所有状态</option>
-                <option value="present">出席</option>
-                <option value="late">迟到</option>
-                <option value="absent">缺席</option>
+                <option value="all">All Status</option>
+                <option value="present">Present</option>
+                <option value="late">Late</option>
+                <option value="absent">Absent</option>
               </select>
 
               <div className="flex items-center space-x-4">
@@ -752,7 +752,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
                 >
                   <Calendar className="w-5 h-5 text-gray-600" />
                   <span className="text-gray-900 font-medium">
-                    {format(weekStart, 'yyyy年MM月dd日', { locale: zhCN })} - {format(weekEnd, 'yyyy年MM月dd日', { locale: zhCN })}
+                    {format(weekStart, 'MMM dd, yyyy', { locale: zhCN })} - {format(weekEnd, 'MMM dd, yyyy', { locale: zhCN })}
                   </span>
                 </button>
 
@@ -773,29 +773,29 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {filteredRecords.length === 0 ? (
             <div className="p-6 text-center text-gray-500">
-              没有找到符合条件的出勤记录
+              No attendance records found
             </div>
           ) : (
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    日期
+                    Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    课程
+                    Course
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    学生
+                    Student
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    状态
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    时间
+                    Time
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    备注
+                    Notes
                   </th>
                 </tr>
               </thead>
@@ -826,7 +826,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
                         ) : (
                           <X className="w-3 h-3 mr-1" />
                         )}
-                        {record.status === 'present' ? '出席' : record.status === 'late' ? '迟到' : '缺席'}
+                        {record.status === 'present' ? 'Present' : record.status === 'late' ? 'Late' : 'Absent'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

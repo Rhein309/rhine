@@ -140,7 +140,7 @@ const GradesPage = () => {
         setError(null);
       } catch (err) {
         console.error('获取数据失败:', err);
-        setError('获取数据失败，请稍后再试');
+        setError('Failed to fetch data, please try again later');
         
         // 如果API调用失败，使用默认数据（仅用于开发/测试）
         setCourses([
@@ -312,7 +312,7 @@ const GradesPage = () => {
     if (!gradeFormData.courseId || !gradeFormData.studentId || !gradeFormData.title || gradeFormData.score < 0) {
       setNotification({
         type: 'error',
-        message: '请填写所有必填字段，并确保分数为正数'
+        message: 'Please fill in all required fields and ensure the score is positive'
       });
       return;
     }
@@ -349,7 +349,7 @@ const GradesPage = () => {
       // 显示成功通知
       setNotification({
         type: 'success',
-        message: '成绩添加成功'
+        message: 'Grade added successfully'
       });
       
       // 重置表单并关闭模态框
@@ -371,7 +371,7 @@ const GradesPage = () => {
       // 显示错误通知
       setNotification({
         type: 'error',
-        message: '添加成绩失败，请稍后再试'
+        message: 'Failed to add grade, please try again later'
       });
       
       // 模拟成功（仅用于开发/测试）
@@ -397,7 +397,7 @@ const GradesPage = () => {
         setGrades(prev => [...prev, newGrade]);
         setNotification({
           type: 'success',
-          message: '成绩添加成功（模拟）'
+          message: 'Grade added successfully (mock)'
         });
         setGradeFormData({
           date: format(new Date(), 'yyyy-MM-dd'),
@@ -475,7 +475,7 @@ const GradesPage = () => {
     if (!batchGradeData.courseId || !batchGradeData.title || batchGradeData.maxScore <= 0) {
       setNotification({
         type: 'error',
-        message: '请填写所有必填字段，并确保最高分数为正数'
+        message: 'Please fill in all required fields and ensure max score is positive'
       });
       return;
     }
@@ -524,7 +524,7 @@ const GradesPage = () => {
       // 显示成功通知
       setNotification({
         type: 'success',
-        message: `成功添加了${batchGrades.length}条成绩记录`
+        message: `Successfully added ${batchGrades.length} grade records`
       });
       
       // 重置表单并关闭模态框
@@ -545,7 +545,7 @@ const GradesPage = () => {
       // 显示错误通知
       setNotification({
         type: 'error',
-        message: '批量添加成绩失败，请稍后再试'
+        message: 'Failed to add grades in batch, please try again later'
       });
       
       // 模拟成功（仅用于开发/测试）
@@ -573,7 +573,7 @@ const GradesPage = () => {
         setGrades(prev => [...prev, ...newGrades]);
         setNotification({
           type: 'success',
-          message: `成功添加了${newGrades.length}条成绩记录（模拟）`
+          message: `Successfully added ${newGrades.length} grade records (mock)`
         });
         setBatchGradeData({
           date: format(new Date(), 'yyyy-MM-dd'),
@@ -606,14 +606,14 @@ const GradesPage = () => {
       <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="course-filter" className="block text-sm font-medium text-gray-700 mb-1">课程</label>
+            <label htmlFor="course-filter" className="block text-sm font-medium text-gray-700 mb-1">Course</label>
             <select
               id="course-filter"
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
             >
-              <option value="all">所有课程</option>
+              <option value="all">All Courses</option>
               {courses.map(course => (
                 <option key={course.id} value={course.id}>{course.name}</option>
               ))}
@@ -621,28 +621,28 @@ const GradesPage = () => {
           </div>
           
           <div>
-            <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-1">评估类型</label>
+            <label htmlFor="type-filter" className="block text-sm font-medium text-gray-700 mb-1">Assessment Type</label>
             <select
               id="type-filter"
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
             >
-              <option value="all">所有类型</option>
-              <option value="quiz">测验</option>
-              <option value="exam">考试</option>
-              <option value="assignment">作业</option>
-              <option value="homework">家庭作业</option>
+              <option value="all">All Types</option>
+              <option value="quiz">Quiz</option>
+              <option value="exam">Exam</option>
+              <option value="assignment">Assignment</option>
+              <option value="homework">Homework</option>
             </select>
           </div>
           
           <div>
-            <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-1">搜索</label>
+            <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-1">Search</label>
             <div className="relative">
               <input
                 id="search-filter"
                 type="text"
-                placeholder="搜索学生或评估标题..."
+                placeholder="Search student or assessment title..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 pl-10"
@@ -659,7 +659,7 @@ const GradesPage = () => {
               className="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors duration-200"
             >
               <Plus className="w-4 h-4 mr-2" />
-              批量添加成绩
+              Batch Add Grades
             </button>
           </div>
           
@@ -691,7 +691,7 @@ const GradesPage = () => {
         </div>
       </div>
 
-      {/* 通知 */}
+      {/* Notification */}
       {notification && (
         <div className={`mb-4 p-4 rounded-md ${notification.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'} flex items-center justify-between`}>
           <div className="flex items-center">
@@ -711,7 +711,7 @@ const GradesPage = () => {
         </div>
       )}
 
-      {/* 加载中 */}
+      {/* Loading */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
@@ -730,7 +730,7 @@ const GradesPage = () => {
                   onClick={() => handleSort('date')}
                 >
                   <div className="flex items-center">
-                    日期
+                    Date
                     {sortField === 'date' && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                     )}
@@ -741,7 +741,7 @@ const GradesPage = () => {
                   onClick={() => handleSort('course')}
                 >
                   <div className="flex items-center">
-                    课程
+                    Course
                     {sortField === 'course' && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                     )}
@@ -752,7 +752,7 @@ const GradesPage = () => {
                   onClick={() => handleSort('type')}
                 >
                   <div className="flex items-center">
-                    类型
+                    Type
                     {sortField === 'type' && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                     )}
@@ -763,7 +763,7 @@ const GradesPage = () => {
                   onClick={() => handleSort('title')}
                 >
                   <div className="flex items-center">
-                    标题
+                    Title
                     {sortField === 'title' && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                     )}
@@ -774,7 +774,7 @@ const GradesPage = () => {
                   onClick={() => handleSort('student')}
                 >
                   <div className="flex items-center">
-                    学生
+                    Student
                     {sortField === 'student' && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                     )}
@@ -785,14 +785,14 @@ const GradesPage = () => {
                   onClick={() => handleSort('score')}
                 >
                   <div className="flex items-center">
-                    分数
+                    Score
                     {sortField === 'score' && (
                       sortDirection === 'asc' ? <ArrowUp className="w-4 h-4 ml-1" /> : <ArrowDown className="w-4 h-4 ml-1" />
                     )}
                   </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  反馈
+                  Feedback
                 </th>
               </tr>
             </thead>
@@ -800,7 +800,7 @@ const GradesPage = () => {
               {filteredAndSortedGrades.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                    没有找到符合条件的成绩记录
+                    No grade records found
                   </td>
                 </tr>
               ) : (
@@ -837,12 +837,12 @@ const GradesPage = () => {
         </div>
       )}
 
-      {/* 添加单个成绩模态框 */}
+      {/* Add Single Grade Modal */}
       {showAddGradeModal && (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">添加成绩</h2>
+            <h2 className="text-xl font-bold text-gray-900">Add Grade</h2>
             <button
               onClick={() => setShowAddGradeModal(false)}
               className="text-gray-500 hover:text-gray-700"
@@ -855,7 +855,7 @@ const GradesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
                 <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
-                  日期
+                  Date
                 </label>
                 <input
                   type="date"
@@ -870,7 +870,7 @@ const GradesPage = () => {
 
               <div>
                 <label htmlFor="courseId" className="block text-sm font-medium text-gray-700 mb-1">
-                  课程
+                  Course
                 </label>
                 <select
                   id="courseId"
@@ -880,7 +880,7 @@ const GradesPage = () => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   required
                 >
-                  <option value="">选择课程</option>
+                  <option value="">Select Course</option>
                   {courses.map(course => (
                     <option key={course.id} value={course.id}>{course.name}</option>
                   ))}
@@ -889,7 +889,7 @@ const GradesPage = () => {
 
               <div>
                 <label htmlFor="studentId" className="block text-sm font-medium text-gray-700 mb-1">
-                  学生
+                  Student
                 </label>
                 <select
                   id="studentId"
@@ -900,7 +900,7 @@ const GradesPage = () => {
                   required
                   disabled={!gradeFormData.courseId}
                 >
-                  <option value={0}>选择学生</option>
+                  <option value={0}>Select Student</option>
                   {gradeFormData.courseId && classes
                     .find(c => c.course === courses.find(course => course.id === gradeFormData.courseId)?.name)
                     ?.students.map(student => (
@@ -912,7 +912,7 @@ const GradesPage = () => {
 
               <div>
                 <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
-                  评估类型
+                  Assessment Type
                 </label>
                 <select
                   id="type"
@@ -922,16 +922,16 @@ const GradesPage = () => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   required
                 >
-                  <option value="quiz">测验</option>
-                  <option value="exam">考试</option>
-                  <option value="assignment">作业</option>
-                  <option value="homework">家庭作业</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="exam">Exam</option>
+                  <option value="assignment">Assignment</option>
+                  <option value="homework">Homework</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-                  评估标题
+                  Assessment Title
                 </label>
                 <input
                   type="text"
@@ -940,7 +940,7 @@ const GradesPage = () => {
                   value={gradeFormData.title}
                   onChange={handleGradeFormChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                  placeholder="例如：第三周测验"
+                  placeholder="e.g. Week 3 Quiz"
                   required
                 />
               </div>
@@ -948,7 +948,7 @@ const GradesPage = () => {
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label htmlFor="score" className="block text-sm font-medium text-gray-700 mb-1">
-                    分数
+                    Score
                   </label>
                   <input
                     type="number"
@@ -965,7 +965,7 @@ const GradesPage = () => {
 
                 <div>
                   <label htmlFor="maxScore" className="block text-sm font-medium text-gray-700 mb-1">
-                    满分
+                    Max Score
                   </label>
                   <input
                     type="number"
@@ -983,7 +983,7 @@ const GradesPage = () => {
 
             <div className="mb-6">
               <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-1">
-                反馈
+                Feedback
               </label>
               <textarea
                 id="feedback"
@@ -992,7 +992,7 @@ const GradesPage = () => {
                 onChange={handleGradeFormChange}
                 rows={3}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                placeholder="提供详细的反馈..."
+                placeholder="Provide detailed feedback..."
               />
             </div>
 
@@ -1002,13 +1002,13 @@ const GradesPage = () => {
                 onClick={() => setShowAddGradeModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
-                取消
+                Cancel
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
               >
-                保存成绩
+                Save Grade
               </button>
             </div>
           </form>
@@ -1016,12 +1016,12 @@ const GradesPage = () => {
       </div>
       )}
 
-      {/* 批量添加成绩模态框 */}
+      {/* Batch Add Grades Modal */}
       {showBatchGradeModal && (
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">批量添加成绩</h2>
+            <h2 className="text-xl font-bold text-gray-900">Batch Add Grades</h2>
             <button
               onClick={() => setShowBatchGradeModal(false)}
               className="text-gray-500 hover:text-gray-700"
@@ -1034,7 +1034,7 @@ const GradesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
                 <label htmlFor="batch-date" className="block text-sm font-medium text-gray-700 mb-1">
-                  日期
+                  Date
                 </label>
                 <input
                   type="date"
@@ -1049,7 +1049,7 @@ const GradesPage = () => {
 
               <div>
                 <label htmlFor="batch-courseId" className="block text-sm font-medium text-gray-700 mb-1">
-                  课程
+                  Course
                 </label>
                 <select
                   id="batch-courseId"
@@ -1059,7 +1059,7 @@ const GradesPage = () => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   required
                 >
-                  <option value="">选择课程</option>
+                  <option value="">Select Course</option>
                   {courses.map(course => (
                     <option key={course.id} value={course.id}>{course.name}</option>
                   ))}
@@ -1068,7 +1068,7 @@ const GradesPage = () => {
 
               <div>
                 <label htmlFor="batch-type" className="block text-sm font-medium text-gray-700 mb-1">
-                  评估类型
+                  Assessment Type
                 </label>
                 <select
                   id="batch-type"
@@ -1078,16 +1078,16 @@ const GradesPage = () => {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
                   required
                 >
-                  <option value="quiz">测验</option>
-                  <option value="exam">考试</option>
-                  <option value="assignment">作业</option>
-                  <option value="homework">家庭作业</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="exam">Exam</option>
+                  <option value="assignment">Assignment</option>
+                  <option value="homework">Homework</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="batch-title" className="block text-sm font-medium text-gray-700 mb-1">
-                  评估标题
+                  Assessment Title
                 </label>
                 <input
                   type="text"
@@ -1096,14 +1096,14 @@ const GradesPage = () => {
                   value={batchGradeData.title}
                   onChange={handleBatchFormChange}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                  placeholder="例如：期中考试"
+                  placeholder="e.g. Midterm Exam"
                   required
                 />
               </div>
 
               <div>
                 <label htmlFor="batch-maxScore" className="block text-sm font-medium text-gray-700 mb-1">
-                  满分
+                  Max Score
                 </label>
                 <input
                   type="number"
@@ -1120,12 +1120,12 @@ const GradesPage = () => {
 
             {selectedClassForBatch && (
               <div className="mt-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">学生成绩</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Student Grades</h3>
                 <div className="bg-gray-50 p-4 rounded-md">
                   <div className="grid grid-cols-12 gap-4 mb-2 font-medium text-gray-700">
-                    <div className="col-span-4">学生</div>
-                    <div className="col-span-2">分数</div>
-                    <div className="col-span-6">反馈</div>
+                    <div className="col-span-4">Student</div>
+                    <div className="col-span-2">Score</div>
+                    <div className="col-span-6">Feedback</div>
                   </div>
                   <div className="space-y-3">
                     {batchGradeData.studentGrades.map((sg) => {
@@ -1134,7 +1134,7 @@ const GradesPage = () => {
                         <div key={sg.studentId} className="grid grid-cols-12 gap-4 items-center">
                           <div className="col-span-4">
                             <div className="text-sm font-medium text-gray-900">{student?.name}</div>
-                            <div className="text-xs text-gray-500">家长: {student?.parent}</div>
+                            <div className="text-xs text-gray-500">Parent: {student?.parent}</div>
                           </div>
                           <div className="col-span-2">
                             <input
@@ -1153,7 +1153,7 @@ const GradesPage = () => {
                               value={sg.feedback}
                               onChange={(e) => handleStudentScoreChange(sg.studentId, 'feedback', e.target.value)}
                               className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                              placeholder="反馈（可选）"
+                              placeholder="Feedback (optional)"
                             />
                           </div>
                         </div>
@@ -1170,14 +1170,14 @@ const GradesPage = () => {
                 onClick={() => setShowBatchGradeModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
-                取消
+                Cancel
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md"
                 disabled={!selectedClassForBatch}
               >
-                保存所有成绩
+                Save All Grades
               </button>
             </div>
           </form>
