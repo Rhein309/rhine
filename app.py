@@ -1013,6 +1013,92 @@ def get_dashboard_stats():
         print(f"服务器错误: {str(e)}")
         return jsonify({"error": f"服务器错误: {str(e)}"}), 500
 
+@app.route('/enroll', methods=['POST'])
+def enroll_course():
+    try:
+        # 获取JSON数据
+        data = request.json
+        if not data:
+            return jsonify({"error": "没有接收到数据"}), 400
+            
+        # 从请求中提取数据
+        course_id = data.get('courseId')
+        parent_id = data.get('parentId')
+        
+        if not course_id or not parent_id:
+            return jsonify({"error": "数据格式不正确，缺少courseId或parentId"}), 400
+            
+        # 打印接收到的数据用于调试
+        print(f"报名请求 - 课程ID: {course_id}, 家长ID: {parent_id}")
+        
+        # 连接数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # 检查课程是否存在
+            cursor.execute("SELECT * FROM courses WHERE id = %s", (course_id,))
+            course = cursor.fetchone()
+            if not course:
+                return jsonify({"error": "课程不存在"}), 404
+                
+            # 检查课程是否已满
+            cursor.execute("SELECT COUNT(*) as count FROM students WHERE FIND_IN_SET(%s, courses)", (str(course_id),))
+            enrolled_count = cursor.fetchone()['count']
+            
+            if enrolled_count >= course['max_students']:
+                return jsonify({"error": "课程已满"}), 400
+            
+            # 创建报名记录
+            # 注意：这里我们创建一个新的表来存储报名信息，而不是依赖于特定的表结构
+            # 首先检查是否存在enrollments表，如果不存在则创建
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS enrollments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                course_id INT NOT NULL,
+                parent_id VARCHAR(100) NOT NULL,
+                enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(20) DEFAULT 'active'
+            )
+            """)
+            
+            # 检查是否已经报名
+            cursor.execute("SELECT * FROM enrollments WHERE course_id = %s AND parent_id = %s",
+                          (course_id, parent_id))
+            existing_enrollment = cursor.fetchone()
+            
+            if existing_enrollment:
+                return jsonify({"error": "您已经报名了该课程"}), 400
+            
+            # 创建新的报名记录
+            cursor.execute("INSERT INTO enrollments (course_id, parent_id) VALUES (%s, %s)",
+                          (course_id, parent_id))
+            
+            connection.commit()
+            return jsonify({"message": "报名成功"}), 200
+            
+        except Exception as e:
+            connection.rollback()
+            print(f"数据库错误: {str(e)}")
+            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+        finally:
+            # 关闭连接
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"服务器错误: {str(e)}")
+        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+
 if __name__ == '__main__':
     # 初始化数据库表
     init_db()
