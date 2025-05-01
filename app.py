@@ -94,6 +94,19 @@ def init_db():
         )
         """)
         
+        # 检查enrollments表是否存在，如果不存在则创建
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS enrollments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            parent_id INT NOT NULL,
+            course_id INT NOT NULL,
+            enrollment_date DATE DEFAULT CURRENT_TIMESTAMP,
+            status VARCHAR(20) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+        )
+        """)
+        
         connection.commit()
         print("数据库表初始化成功")
     except Exception as e:
@@ -1061,15 +1074,7 @@ def enroll_course():
             # 创建报名记录
             # 注意：这里我们创建一个新的表来存储报名信息，而不是依赖于特定的表结构
             # 首先检查是否存在enrollments表，如果不存在则创建
-            cursor.execute("""
-            CREATE TABLE IF NOT EXISTS enrollments (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                course_id INT NOT NULL,
-                parent_id VARCHAR(100) NOT NULL,
-                enrollment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                status VARCHAR(20) DEFAULT 'active'
-            )
-            """)
+            # 注意：enrollments表已在init_db()中创建，这里不再重复创建
             
             # 检查是否已经报名
             cursor.execute("SELECT * FROM enrollments WHERE course_id = %s AND parent_id = %s",
@@ -1080,8 +1085,14 @@ def enroll_course():
                 return jsonify({"error": "您已经报名了该课程"}), 400
             
             # 创建新的报名记录
+            # 确保parent_id是整数类型
+            try:
+                parent_id_int = int(parent_id)
+            except ValueError:
+                return jsonify({"error": "parentId必须是整数"}), 400
+                
             cursor.execute("INSERT INTO enrollments (course_id, parent_id) VALUES (%s, %s)",
-                          (course_id, parent_id))
+                          (course_id, parent_id_int))
             
             connection.commit()
             return jsonify({"message": "报名成功"}), 200
@@ -1108,6 +1119,12 @@ def get_user_enrollments():
         if not parent_id:
             return jsonify({"error": "缺少parentId参数"}), 400
             
+        # 确保parent_id是整数类型
+        try:
+            parent_id_int = int(parent_id)
+        except ValueError:
+            return jsonify({"error": "parentId必须是整数"}), 400
+            
         # 连接数据库
         connection = pymysql.connect(
             host=db_config['host'],
@@ -1129,7 +1146,7 @@ def get_user_enrollments():
             JOIN courses c ON e.course_id = c.id
             WHERE e.parent_id = %s AND e.status = 'active'
             """
-            cursor.execute(sql, (parent_id,))
+            cursor.execute(sql, (parent_id_int,))
             enrollments = cursor.fetchall()
             
             # 格式化结果
