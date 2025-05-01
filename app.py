@@ -3,19 +3,19 @@ from flask_cors import CORS
 import pymysql
 
 app = Flask(__name__)
-CORS(app)  # 启用CORS支持跨域请求
+CORS(app)  # Enable CORS for cross-origin requests
 
-# 数据库连接配置
+# Database connection configuration
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'port': 33066,  # 修改为默认MySQL端口
-    # 'password': 'Shilihao1230',  # 确认密码是否正确
-    'password': '',  # 确认密码是否正确
+    'port': 33066,  # Modified to default MySQL port
+    # 'password': 'Shilihao1230',  # Verify if password is correct
+    'password': '',  # Verify if password is correct
     'database': 'project'
 }
 
-# 初始化数据库表
+# Initialize database tables
 def init_db():
     try:
         connection = pymysql.connect(
@@ -30,7 +30,7 @@ def init_db():
         )
         cursor = connection.cursor()
         
-        # 检查students表是否存在，如果不存在则创建
+        # Check if students table exists, create if not
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS students (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -55,7 +55,7 @@ def init_db():
         )
         """)
         
-        # 检查teachers表是否存在，如果不存在则创建
+        # Check if teachers table exists, create if not
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS teachers (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -76,7 +76,7 @@ def init_db():
         )
         """)
         
-        # 检查courses表是否存在，如果不存在则创建
+        # Check if courses table exists, create if not
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS courses (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -94,7 +94,7 @@ def init_db():
         )
         """)
         
-        # 检查enrollments表是否存在，如果不存在则创建
+        # Check if enrollments table exists, create if not
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS enrollments (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -108,9 +108,9 @@ def init_db():
         """)
         
         connection.commit()
-        print("数据库表初始化成功")
+        print("Database tables initialized successfully")
     except Exception as e:
-        print(f"数据库表初始化失败: {str(e)}")
+        print(f"Database tables initialization failed: {str(e)}")
     finally:
         cursor.close()
         connection.close()
@@ -118,29 +118,29 @@ def init_db():
 @app.route('/signup', methods=['POST'])
 def signup():
     try:
-        # 获取JSON数据
+        # Get JSON data
         data = request.json
         if not data:
-            return jsonify({"error": "没有接收到数据"}), 400
+            return jsonify({"error": "No data received"}), 400
             
-        # 从请求中提取数据
+        # Extract data from request
         user_type = data.get('userType')
         form_data = data.get('formData')
         
         if not user_type or not form_data:
-            return jsonify({"error": "数据格式不正确"}), 400
+            return jsonify({"error": "Incorrect data format"}), 400
             
-        # 提取表单数据
+        # Extract form data
         first_name = form_data.get('firstName')
         last_name = form_data.get('lastName')
         email = form_data.get('email')
         password = form_data.get('password')
         
-        # 打印接收到的数据用于调试
-        print(f"用户类型: {user_type}")
-        print(f"表单数据: {form_data}")
+        # Print received data for debugging
+        print(f"User type: {user_type}")
+        print(f"Form data: {form_data}")
         
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -149,7 +149,7 @@ def signup():
             database=db_config['database'],
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor,
-            ssl={'fake': True}  # 绕过SSL验证要求
+            ssl={'fake': True}  # Bypass SSL verification requirement
         )
         cursor = connection.cursor()
         
@@ -157,54 +157,54 @@ def signup():
             if user_type == 'parent':
                 child_name = form_data.get('childName')
                 child_age = form_data.get('childAge')
-                # 插入数据 - 修正列名格式
+                # Insert data - Fix column name format
                 sql = "INSERT INTO parent (`id`, `First_Name`, `Last_Name`, `Email_Address`, `Password`, `Child_Name`, `Child_Age`) VALUES (%s, %s, %s, %s, %s, %s, %s)"
                 cursor.execute(sql, (0, first_name, last_name, email, password, child_name, child_age))
             elif user_type == 'teacher':
                 subject = form_data.get('subject')
                 experience = form_data.get('experience')
-                # 插入数据 - 修正列名格式
+                # Insert data - Fix column name format
                 sql = "INSERT INTO teacher (`id`, `First_Name`, `Last_Name`, `Email_Address`, `Password`, `Subject`, `Experience`) VALUES (%s, %s, %s, %s, %s, %s, %s)"
                 cursor.execute(sql, (0, first_name, last_name, email, password, subject, experience))
             else:
-                return jsonify({"error": "不支持的用户类型"}), 400
+                return jsonify({"error": "Unsupported user type"}), 400
                 
             connection.commit()
-            return jsonify({"message": "注册成功！"}), 200
+            return jsonify({"message": "Registration successful!"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/login', methods=['POST'])
 def login():
     try:
-        # 获取JSON数据
+        # Get JSON data
         data = request.json
         if not data:
-            return jsonify({"error": "没有接收到数据"}), 400
+            return jsonify({"error": "No data received"}), 400
             
-        # 从请求中提取数据
+        # Extract data from request
         user_type = data.get('userType')
         email = data.get('email')
         password = data.get('password')
         
         if not user_type or not email or not password:
-            return jsonify({"error": "数据格式不正确"}), 400
+            return jsonify({"error": "Incorrect data format"}), 400
             
-        # 打印接收到的数据用于调试
-        print(f"登录尝试 - 用户类型: {user_type}, 邮箱: {email}， 密码: {password}")
+        # Print received data for debugging
+        print(f"Login attempt - User type: {user_type}, Email: {email}, Password: {password}")
         
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -213,12 +213,12 @@ def login():
             database=db_config['database'],
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor,
-            ssl={'fake': True}  # 绕过SSL验证要求
+            ssl={'fake': True}  # Bypass SSL verification requirement
         )
         cursor = connection.cursor()
         
         try:
-            # 根据用户类型查询相应的表
+            # Query the appropriate table based on user type
             if user_type == 'parent':
                 sql = "SELECT * FROM parent WHERE Email_Address = %s AND Password = %s"
                 cursor.execute(sql, (email, password))
@@ -232,13 +232,13 @@ def login():
                 cursor.execute(sql, (email, password))
                 user = cursor.fetchone()
             else:
-                return jsonify({"error": "不支持的用户类型"}), 400
+                return jsonify({"error": "Unsupported user type"}), 400
                 
             if user:
-                # 用户验证成功
-                # 注意：在实际生产环境中，应该使用会话或令牌进行身份验证
+                # User authentication successful
+                # Note: In a production environment, sessions or tokens should be used for authentication
                 return jsonify({
-                    "message": "登录成功",
+                    "message": "Login successful",
                     "user": {
                         "id": user['id'],
                         "firstName": user['First_Name'],
@@ -248,33 +248,33 @@ def login():
                     }
                 }), 200
             else:
-                # 用户验证失败
-                return jsonify({"error": "邮箱或密码不正确"}), 401
+                # User authentication failed
+                return jsonify({"error": "Incorrect email or password"}), 401
                 
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/students', methods=['POST'])
 def add_student():
     try:
-        # 获取JSON数据
+        # Get JSON data
         data = request.json
         if not data:
-            return jsonify({"error": "没有接收到数据"}), 400
+            return jsonify({"error": "No data received"}), 400
             
-        # 打印接收到的数据用于调试
-        print(f"接收到的学生数据: {data}")
+        # Print received data for debugging
+        print(f"Received student data: {data}")
         
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -283,12 +283,12 @@ def add_student():
             database=db_config['database'],
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor,
-            ssl={'fake': True}  # 绕过SSL验证要求
+            ssl={'fake': True}  # Bypass SSL verification requirement
         )
         cursor = connection.cursor()
         
         try:
-            # 从请求中提取学生数据
+            # Extract student data from request
             first_name = data.get('firstName')
             last_name = data.get('lastName')
             date_of_birth = data.get('dateOfBirth')
@@ -296,22 +296,22 @@ def add_student():
             id_type = data.get('idType')
             grade = data.get('grade')
             location = data.get('location')
-            courses = ','.join(data.get('courses', []))  # 将课程列表转换为逗号分隔的字符串
+            courses = ','.join(data.get('courses', []))  # Convert course list to comma-separated string
             
-            # 家长信息
+            # Parent information
             parent_name = data.get('parentName')
             parent_email = data.get('parentEmail')
             parent_phone = data.get('parentPhone')
             parent_id_number = data.get('parentIdNumber')
             parent_id_type = data.get('parentIdType')
             
-            # 其他信息
+            # Other information
             address = data.get('address')
             emergency_contact = data.get('emergencyContact')
             medical_info = data.get('medicalInfo')
             notes = data.get('notes')
             
-            # 插入数据到学生表
+            # Insert data into students table
             sql = """
             INSERT INTO students (
                 first_name, last_name, date_of_birth, id_number, id_type,
@@ -330,33 +330,33 @@ def add_student():
             ))
                 
             connection.commit()
-            return jsonify({"message": "学生添加成功！"}), 200
+            return jsonify({"message": "Student added successfully!"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/courses', methods=['POST'])
 def add_course():
     try:
-        # 获取JSON数据
+        # Get JSON data
         data = request.json
         if not data:
-            return jsonify({"error": "没有接收到数据"}), 400
+            return jsonify({"error": "No data received"}), 400
             
-        # 打印接收到的数据用于调试
-        print(f"接收到的课程数据: {data}")
+        # Print received data for debugging
+        print(f"Received course data: {data}")
         
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -365,24 +365,24 @@ def add_course():
             database=db_config['database'],
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor,
-            ssl={'fake': True}  # 绕过SSL验证要求
+            ssl={'fake': True}  # Bypass SSL verification requirement
         )
         cursor = connection.cursor()
         
         try:
-            # 从请求中提取课程数据
+            # Extract course data from request
             name = data.get('name')
             level = data.get('level')
             age_range = data.get('ageRange')
             location = data.get('location')
             schedule = data.get('schedule')
             time = data.get('time')
-            teacher_id = data.get('teacher')  # 现在这是教师ID
+            teacher_id = data.get('teacher')  # This is now the teacher ID
             max_students = data.get('maxStudents')
             fee = data.get('fee')
             description = data.get('description')
             
-            # 根据教师ID获取教师名称
+            # Get teacher name based on teacher ID
             teacher_name = ""
             if teacher_id:
                 sql_get_teacher = "SELECT CONCAT(first_name, ' ', last_name) as full_name FROM teachers WHERE id = %s"
@@ -391,10 +391,10 @@ def add_course():
                 if teacher_result:
                     teacher_name = teacher_result['full_name']
                 else:
-                    # 如果找不到教师，使用ID作为备用
+                    # If teacher not found, use ID as fallback
                     teacher_name = f"Teacher ID: {teacher_id}"
             
-            # 插入数据到课程表
+            # Insert data into courses table
             sql = """
             INSERT INTO courses (
                 name, level, age_range, location, schedule,
@@ -409,33 +409,33 @@ def add_course():
             ))
                 
             connection.commit()
-            return jsonify({"message": "课程添加成功！"}), 200
+            return jsonify({"message": "Course added successfully!"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/teachers', methods=['POST'])
 def add_teacher():
     try:
-        # 获取JSON数据
+        # Get JSON data
         data = request.json
         if not data:
-            return jsonify({"error": "没有接收到数据"}), 400
+            return jsonify({"error": "No data received"}), 400
             
-        # 打印接收到的数据用于调试
-        print(f"接收到的教师数据: {data}")
+        # Print received data for debugging
+        print(f"Received teacher data: {data}")
         
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -444,12 +444,12 @@ def add_teacher():
             database=db_config['database'],
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor,
-            ssl={'fake': True}  # 绕过SSL验证要求
+            ssl={'fake': True}  # Bypass SSL verification requirement
         )
         cursor = connection.cursor()
         
         try:
-            # 从请求中提取教师数据
+            # Extract teacher data from request
             first_name = data.get('firstName')
             last_name = data.get('lastName')
             email = data.get('email')
@@ -457,14 +457,14 @@ def add_teacher():
             id_number = data.get('idNumber')
             id_type = data.get('idType')
             location = data.get('location')
-            courses = ','.join(data.get('courses', []))  # 将课程列表转换为逗号分隔的字符串
+            courses = ','.join(data.get('courses', []))  # Convert course list to comma-separated string
             qualifications = data.get('qualifications')
             experience = data.get('experience')
             join_date = data.get('joinDate')
             languages = data.get('languages')
             bio = data.get('bio', '')
             
-            # 插入数据到教师表
+            # Insert data into teachers table
             sql = """
             INSERT INTO teachers (
                 first_name, last_name, email, phone, id_number, id_type,
@@ -481,25 +481,25 @@ def add_teacher():
             ))
                 
             connection.commit()
-            return jsonify({"message": "教师添加成功！"}), 200
+            return jsonify({"message": "Teacher added successfully!"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/courses/<int:course_id>', methods=['DELETE'])
 def delete_course(course_id):
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -513,33 +513,33 @@ def delete_course(course_id):
         cursor = connection.cursor()
         
         try:
-            # 删除课程
+            # Delete course
             sql = "DELETE FROM courses WHERE id = %s"
             cursor.execute(sql, (course_id,))
             
             if cursor.rowcount == 0:
-                return jsonify({"error": "未找到指定课程"}), 404
+                return jsonify({"error": "Course not found"}), 404
                 
             connection.commit()
-            return jsonify({"message": "课程删除成功"}), 200
+            return jsonify({"message": "Course deleted successfully"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/courses', methods=['GET'])
 def get_courses():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -553,20 +553,20 @@ def get_courses():
         cursor = connection.cursor()
         
         try:
-            # 查询所有课程
+            # Query all courses
             sql = "SELECT * FROM courses"
             cursor.execute(sql)
             courses_data = cursor.fetchall()
             
-            # 查询每个课程的已注册学生数量
+            # Query the number of registered students for each course
             courses = []
             for course in courses_data:
-                # 查询已注册该课程的学生数量
+                # Query the number of students registered for this course
                 sql = "SELECT COUNT(*) as count FROM students WHERE FIND_IN_SET(%s, courses)"
                 cursor.execute(sql, (str(course['id'])))
                 enrolled_count = cursor.fetchone()['count']
                 
-                # 转换数据格式以匹配前端需求
+                # Convert data format to match frontend requirements
                 courses.append({
                     'id': course['id'],
                     'name': course['name'],
@@ -579,27 +579,27 @@ def get_courses():
                     'enrolledStudents': enrolled_count,
                     'maxStudents': course['max_students'],
                     'fee': course['fee'],
-                    'status': 'active'  # 默认所有课程都是活跃的
+                    'status': 'active'  # Default all courses are active
                 })
                 
             return jsonify(courses), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/students', methods=['GET'])
 def get_students():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -613,24 +613,24 @@ def get_students():
         cursor = connection.cursor()
         
         try:
-            # 查询所有学生
+            # Query all students
             sql = "SELECT * FROM students"
             cursor.execute(sql)
             students_data = cursor.fetchall()
             
-            # 转换数据格式以匹配前端需求
+            # Convert data format to match frontend requirements
             students = []
             for student in students_data:
-                # 计算年龄（根据出生日期）
+                # Calculate age (based on date of birth)
                 from datetime import datetime
                 birth_date = datetime.strptime(str(student['date_of_birth']), '%Y-%m-%d')
                 today = datetime.today()
                 age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
                 
-                # 将课程字符串转换为数组
+                # Convert courses string to array
                 courses_list = student['courses'].split(',') if student['courses'] else []
                 
-                # 转换数据格式
+                # Convert data format
                 students.append({
                     'id': student['id'],
                     'name': f"{student['first_name']} {student['last_name']}",
@@ -641,27 +641,27 @@ def get_students():
                     'parent': student['parent_name'],
                     'contact': student['parent_phone'],
                     'joinDate': student['created_at'].strftime('%Y-%m-%d'),
-                    'status': 'active'  # 默认所有学生都是活跃的
+                    'status': 'active'  # Default all students are active
                 })
                 
             return jsonify(students), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/teachers/<int:teacher_id>', methods=['DELETE'])
 def delete_teacher(teacher_id):
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -675,33 +675,33 @@ def delete_teacher(teacher_id):
         cursor = connection.cursor()
         
         try:
-            # 删除教师
+            # Delete teacher
             sql = "DELETE FROM teachers WHERE id = %s"
             cursor.execute(sql, (teacher_id,))
             
             if cursor.rowcount == 0:
-                return jsonify({"error": "未找到指定教师"}), 404
+                return jsonify({"error": "Teacher not found"}), 404
                 
             connection.commit()
-            return jsonify({"message": "教师删除成功"}), 200
+            return jsonify({"message": "Teacher deleted successfully"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/students/<int:student_id>', methods=['DELETE'])
 def delete_student(student_id):
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -715,33 +715,33 @@ def delete_student(student_id):
         cursor = connection.cursor()
         
         try:
-            # 删除学生
+            # Delete student
             sql = "DELETE FROM students WHERE id = %s"
             cursor.execute(sql, (student_id,))
             
             if cursor.rowcount == 0:
-                return jsonify({"error": "未找到指定学生"}), 404
+                return jsonify({"error": "Student not found"}), 404
                 
             connection.commit()
-            return jsonify({"message": "学生删除成功"}), 200
+            return jsonify({"message": "Student deleted successfully"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/locations', methods=['GET'])
 def get_locations():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -755,16 +755,16 @@ def get_locations():
         cursor = connection.cursor()
         
         try:
-            # 查询所有不同的位置
+            # Query all distinct locations
             sql = "SELECT DISTINCT location FROM students"
             cursor.execute(sql)
             locations_data = cursor.fetchall()
             
-            # 转换数据格式
+            # Convert data format
             locations = []
             for idx, location in enumerate(locations_data):
                 location_name = location['location']
-                # 生成一个简单的ID
+                # Generate a simple ID
                 location_id = ''.join(c.lower() for c in location_name if c.isalpha())[:3]
                 locations.append({
                     'id': location_id,
@@ -774,21 +774,21 @@ def get_locations():
             return jsonify(locations), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/course-names', methods=['GET'])
 def get_course_names():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -802,12 +802,12 @@ def get_course_names():
         cursor = connection.cursor()
         
         try:
-            # 查询所有课程
+            # Query all courses
             sql = "SELECT id, name FROM courses"
             cursor.execute(sql)
             courses_data = cursor.fetchall()
             
-            # 转换数据格式
+            # Convert data format
             courses = []
             for course in courses_data:
                 courses.append({
@@ -818,21 +818,21 @@ def get_course_names():
             return jsonify(courses), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/teachers', methods=['GET'])
 def get_teachers():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -846,21 +846,21 @@ def get_teachers():
         cursor = connection.cursor()
         
         try:
-            # 查询所有教师
+            # Query all teachers
             sql = "SELECT * FROM teachers"
             cursor.execute(sql)
             teachers_data = cursor.fetchall()
             
-            # 转换数据格式以匹配前端需求
+            # Convert data format to match frontend requirements
             teachers = []
             for teacher in teachers_data:
-                # 将课程字符串转换为数组
+                # Convert courses string to array
                 courses_list = teacher['courses'].split(',') if teacher['courses'] else []
                 
-                # 将资格证书字符串转换为数组
+                # Convert qualifications string to array
                 qualifications_list = teacher['qualifications'].split(',') if teacher['qualifications'] else []
                 
-                # 转换数据格式
+                # Convert data format
                 teachers.append({
                     'id': teacher['id'],
                     'name': f"{teacher['first_name']} {teacher['last_name']}",
@@ -870,27 +870,27 @@ def get_teachers():
                     'qualifications': qualifications_list,
                     'contact': teacher['phone'],
                     'joinDate': teacher['join_date'].strftime('%Y-%m-%d'),
-                    'status': 'active'  # 默认所有教师都是活跃的
+                    'status': 'active'  # Default all teachers are active
                 })
                 
             return jsonify(teachers), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/grades', methods=['GET'])
 def get_grades():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -904,36 +904,36 @@ def get_grades():
         cursor = connection.cursor()
         
         try:
-            # 查询所有不同的年级
+            # Query all distinct grades
             sql = "SELECT DISTINCT grade FROM students"
             cursor.execute(sql)
             grades_data = cursor.fetchall()
             
-            # 提取年级列表
+            # Extract grade list
             grades = [grade['grade'] for grade in grades_data]
             
-            # 如果数据库中没有年级数据，返回默认年级
+            # If no grade data in database, return default grades
             if not grades:
                 grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']
                 
             return jsonify(grades), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/admin/dashboard-stats', methods=['GET'])
 def get_dashboard_stats():
     try:
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -947,48 +947,48 @@ def get_dashboard_stats():
         cursor = connection.cursor()
         
         try:
-            # 获取学生总数
+            # Get total number of students
             cursor.execute("SELECT COUNT(*) as count FROM students")
             total_students = cursor.fetchone()['count']
             
-            # 获取上个月学生总数，计算变化百分比
+            # Get last month's student count, calculate percentage change
             from datetime import datetime, timedelta
             one_month_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
             cursor.execute("SELECT COUNT(*) as count FROM students WHERE created_at < %s", (one_month_ago,))
-            last_month_students = cursor.fetchone()['count'] or 1  # 避免除以零
+            last_month_students = cursor.fetchone()['count'] or 1  # Avoid division by zero
             student_change_percent = round(((total_students - last_month_students) / last_month_students) * 100)
             student_change = f"+{student_change_percent}%" if student_change_percent > 0 else f"{student_change_percent}%"
             
-            # 获取活跃课程数
+            # Get active course count
             cursor.execute("SELECT COUNT(*) as count FROM courses")
             active_courses = cursor.fetchone()['count']
             
-            # 获取上个月课程数，计算变化
+            # Get last month's course count, calculate change
             cursor.execute("SELECT COUNT(*) as count FROM courses WHERE created_at < %s", (one_month_ago,))
             last_month_courses = cursor.fetchone()['count'] or 0
             course_change = f"+{active_courses - last_month_courses}" if active_courses > last_month_courses else f"{active_courses - last_month_courses}"
             
-            # 获取教师总数
+            # Get total number of teachers
             cursor.execute("SELECT COUNT(*) as count FROM teachers")
             total_teachers = cursor.fetchone()['count']
             
-            # 获取上个月教师数，计算变化
+            # Get last month's teacher count, calculate change
             cursor.execute("SELECT COUNT(*) as count FROM teachers WHERE created_at < %s", (one_month_ago,))
             last_month_teachers = cursor.fetchone()['count'] or total_teachers
             teacher_change = f"+{total_teachers - last_month_teachers}" if total_teachers > last_month_teachers else f"{total_teachers - last_month_teachers}"
             
-            # 获取今日课程数（这里需要根据实际情况调整，假设有一个课程表表格）
-            # 由于没有课程表表格，这里使用一个估计值：每个课程每周上课一次
+            # Get today's class count (this needs to be adjusted based on actual situation, assuming there's a course schedule table)
+            # Since there's no course schedule table, use an estimate here: each course has one class per week
             today_weekday = datetime.now().weekday()  # 0-6，0是周一
             cursor.execute("SELECT COUNT(*) as count FROM courses WHERE schedule LIKE %s", (f"%{today_weekday}%",))
             classes_today_result = cursor.fetchone()
             classes_today = classes_today_result['count'] if classes_today_result else 0
             
-            # 假设上周同一天的课程数
-            last_week_classes = int(classes_today * 1.1)  # 假设比本周多10%
+            # Assume last week's class count on the same day
+            last_week_classes = int(classes_today * 1.1)  # Assume 10% more than this week
             classes_change = f"{classes_today - last_week_classes}"
             
-            # 构建响应数据
+            # Build response data
             stats = {
                 "totalStudents": {
                     "value": str(total_students),
@@ -1015,36 +1015,36 @@ def get_dashboard_stats():
             return jsonify(stats), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/enroll', methods=['POST'])
 def enroll_course():
     try:
-        # 获取JSON数据
+        # Get JSON data
         data = request.json
         if not data:
-            return jsonify({"error": "没有接收到数据"}), 400
+            return jsonify({"error": "No data received"}), 400
             
-        # 从请求中提取数据
+        # Extract data from request
         course_id = data.get('courseId')
         parent_id = data.get('parentId')
         
         if not course_id or not parent_id:
-            return jsonify({"error": "数据格式不正确，缺少courseId或parentId"}), 400
+            return jsonify({"error": "Incorrect data format, missing courseId or parentId"}), 400
             
-        # 打印接收到的数据用于调试
-        print(f"报名请求 - 课程ID: {course_id}, 家长ID: {parent_id}")
+        # Print received data for debugging
+        print(f"Enrollment request - Course ID: {course_id}, Parent ID: {parent_id}")
         
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -1058,74 +1058,74 @@ def enroll_course():
         cursor = connection.cursor()
         
         try:
-            # 检查课程是否存在
+            # Check if course exists
             cursor.execute("SELECT * FROM courses WHERE id = %s", (course_id,))
             course = cursor.fetchone()
             if not course:
-                return jsonify({"error": "课程不存在"}), 404
+                return jsonify({"error": "Course does not exist"}), 404
                 
-            # 检查课程是否已满
+            # Check if course is full
             cursor.execute("SELECT COUNT(*) as count FROM students WHERE FIND_IN_SET(%s, courses)", (str(course_id),))
             enrolled_count = cursor.fetchone()['count']
             
             if enrolled_count >= course['max_students']:
-                return jsonify({"error": "课程已满"}), 400
+                return jsonify({"error": "Course is full"}), 400
             
-            # 创建报名记录
-            # 注意：这里我们创建一个新的表来存储报名信息，而不是依赖于特定的表结构
-            # 首先检查是否存在enrollments表，如果不存在则创建
-            # 注意：enrollments表已在init_db()中创建，这里不再重复创建
+            # Create enrollment record
+            # Note: Here we create a new table to store enrollment information, rather than relying on a specific table structure
+            # First check if enrollments table exists, if not create it
+            # Note: enrollments table has already been created in init_db(), no need to create it again here
             
-            # 检查是否已经报名
+            # Check if already enrolled
             cursor.execute("SELECT * FROM enrollments WHERE course_id = %s AND parent_id = %s",
                           (course_id, parent_id))
             existing_enrollment = cursor.fetchone()
             
             if existing_enrollment:
-                return jsonify({"error": "您已经报名了该课程"}), 400
+                return jsonify({"error": "You have already enrolled in this course"}), 400
             
-            # 创建新的报名记录
-            # 确保parent_id是整数类型
+            # Create new enrollment record
+            # Ensure parent_id is integer type
             try:
                 parent_id_int = int(parent_id)
             except ValueError:
-                return jsonify({"error": "parentId必须是整数"}), 400
+                return jsonify({"error": "parentId must be an integer"}), 400
                 
             cursor.execute("INSERT INTO enrollments (course_id, parent_id) VALUES (%s, %s)",
                           (course_id, parent_id_int))
             
             connection.commit()
-            return jsonify({"message": "报名成功"}), 200
+            return jsonify({"message": "Enrollment successful"}), 200
             
         except Exception as e:
             connection.rollback()
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 @app.route('/user-enrollments', methods=['GET'])
 def get_user_enrollments():
     try:
-        # 获取请求参数
+        # Get request parameters
         parent_id = request.args.get('parentId')
         
         if not parent_id:
-            return jsonify({"error": "缺少parentId参数"}), 400
+            return jsonify({"error": "Missing parentId parameter"}), 400
             
-        # 确保parent_id是整数类型
+        # Ensure parent_id is integer type
         try:
             parent_id_int = int(parent_id)
         except ValueError:
-            return jsonify({"error": "parentId必须是整数"}), 400
+            return jsonify({"error": "parentId must be an integer"}), 400
             
-        # 连接数据库
+        # Connect to database
         connection = pymysql.connect(
             host=db_config['host'],
             user=db_config['user'],
@@ -1139,7 +1139,7 @@ def get_user_enrollments():
         cursor = connection.cursor()
         
         try:
-            # 查询用户报名的课程
+            # Query user's enrolled courses
             sql = """
             SELECT c.*, e.enrollment_date, e.status as enrollment_status
             FROM enrollments e
@@ -1149,10 +1149,10 @@ def get_user_enrollments():
             cursor.execute(sql, (parent_id_int,))
             enrollments = cursor.fetchall()
             
-            # 格式化结果
+            # Format results
             formatted_enrollments = []
             for enrollment in enrollments:
-                # 安全处理时间格式
+                # Safely handle time format
                 time_parts = enrollment['time'].split('-') if '-' in enrollment['time'] else ['00:00', '00:00']
                 start_time = time_parts[0].strip() if len(time_parts) > 0 else '00:00'
                 end_time = time_parts[1].strip() if len(time_parts) > 1 else '01:00'
@@ -1173,18 +1173,18 @@ def get_user_enrollments():
             return jsonify(formatted_enrollments), 200
             
         except Exception as e:
-            print(f"数据库错误: {str(e)}")
-            return jsonify({"error": f"数据库错误: {str(e)}"}), 500
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
-            # 关闭连接
+            # Close connection
             cursor.close()
             connection.close()
             
     except Exception as e:
-        print(f"服务器错误: {str(e)}")
-        return jsonify({"error": f"服务器错误: {str(e)}"}), 500
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # 初始化数据库表
+    # Initialize database tables
     init_db()
     app.run(port=9999, debug=True, host='0.0.0.0')
