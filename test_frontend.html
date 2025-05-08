@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成绩管理系统 - 测试页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">成绩管理系统 - API测试</h1>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 课程列表 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">课程列表</h2>
+                    <button id="fetchCourses" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                        获取数据
+                    </button>
+                </div>
+                <div id="coursesLoading" class="hidden flex justify-center my-4">
+                    <span class="loading"></span>
+                </div>
+                <div id="coursesError" class="hidden bg-red-100 text-red-700 p-4 rounded-md mb-4"></div>
+                <div id="coursesList" class="space-y-2"></div>
+            </div>
+            
+            <!-- 成绩列表 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">成绩列表</h2>
+                    <button id="fetchGrades" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md">
+                        获取数据
+                    </button>
+                </div>
+                <div id="gradesLoading" class="hidden flex justify-center my-4">
+                    <span class="loading"></span>
+                </div>
+                <div id="gradesError" class="hidden bg-red-100 text-red-700 p-4 rounded-md mb-4"></div>
+                <div id="gradesList" class="space-y-2"></div>
+            </div>
+            
+            <!-- 添加成绩 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">添加成绩</h2>
+                <form id="addGradeForm" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                            <input type="date" id="date" class="w-full border border-gray-300 rounded-md px-3 py-2" value="2025-01-20" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">课程</label>
+                            <select id="courseId" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                                <option value="">选择课程</option>
+                                <option value="phonics" data-name="Phonics Foundation">Phonics Foundation</option>
+                                <option value="readers" data-name="Young Readers">Young Readers</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">学生</label>
+                            <select id="studentId" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                                <option value="">选择学生</option>
+                                <option value="1" data-name="Emily Wong">Emily Wong</option>
+                                <option value="2" data-name="Thomas Chan">Thomas Chan</option>
+                                <option value="3" data-name="Sophie Lee">Sophie Lee</option>
+                                <option value="4" data-name="Jason Lam">Jason Lam</option>
+                                <option value="5" data-name="Alice Chen">Alice Chen</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">评估类型</label>
+                            <select id="type" class="w-full border border-gray-300 rounded-md px-3 py-2" required>
+                                <option value="quiz">Quiz</option>
+                                <option value="exam">Exam</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="homework">Homework</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">评估标题</label>
+                        <input type="text" id="title" class="w-full border border-gray-300 rounded-md px-3 py-2" value="Midterm Exam" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">得分</label>
+                            <input type="number" id="score" class="w-full border border-gray-300 rounded-md px-3 py-2" value="90" min="0" max="100" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">满分</label>
+                            <input type="number" id="maxScore" class="w-full border border-gray-300 rounded-md px-3 py-2" value="100" min="1" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">反馈意见</label>
+                        <textarea id="feedback" class="w-full border border-gray-300 rounded-md px-3 py-2" rows="3">Good performance</textarea>
+                    </div>
+                    
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md w-full">
+                        添加成绩
+                    </button>
+                </form>
+                <div id="addGradeLoading" class="hidden flex justify-center my-4">
+                    <span class="loading"></span>
+                </div>
+                <div id="addGradeResult" class="hidden mt-4"></div>
+            </div>
+            
+            <!-- 批量添加成绩 -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">批量添加成绩</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">课程</label>
+                        <select id="batchCourseId" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                            <option value="">选择课程</option>
+                            <option value="phonics" data-name="Phonics Foundation">Phonics Foundation</option>
+                            <option value="readers" data-name="Young Readers">Young Readers</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">日期</label>
+                            <input type="date" id="batchDate" class="w-full border border-gray-300 rounded-md px-3 py-2" value="2025-01-25">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">评估类型</label>
+                            <select id="batchType" class="w-full border border-gray-300 rounded-md px-3 py-2">
+                                <option value="quiz">Quiz</option>
+                                <option value="exam">Exam</option>
+                                <option value="assignment">Assignment</option>
+                                <option value="homework">Homework</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">评估标题</label>
+                        <input type="text" id="batchTitle" class="w-full border border-gray-300 rounded-md px-3 py-2" value="Vocabulary Quiz">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">满分</label>
+                        <input type="number" id="batchMaxScore" class="w-full border border-gray-300 rounded-md px-3 py-2" value="100" min="1">
+                    </div>
+                    
+                    <div id="batchStudentsContainer" class="space-y-4 border border-gray-200 rounded-md p-4 bg-gray-50">
+                        <h3 class="font-medium">学生成绩</h3>
+                        <div id="batchStudents" class="space-y-4">
+                            <!-- 学生成绩输入区域将动态生成 -->
+                        </div>
+                    </div>
+                    
+                    <button id="addBatchGrades" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md w-full">
+                        批量添加成绩
+                    </button>
+                </div>
+                <div id="batchGradeLoading" class="hidden flex justify-center my-4">
+                    <span class="loading"></span>
+                </div>
+                <div id="batchGradeResult" class="hidden mt-4"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:9999';
+        
+        // 获取课程列表
+        document.getElementById('fetchCourses').addEventListener('click', async () => {
+            const loadingEl = document.getElementById('coursesLoading');
+            const errorEl = document.getElementById('coursesError');
+            const listEl = document.getElementById('coursesList');
+            
+            loadingEl.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            listEl.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/courses`);
+                if (!response.ok) throw new Error('获取课程失败');
+                
+                const courses = await response.json();
+                
+                if (courses.length === 0) {
+                    listEl.innerHTML = '<p class="text-gray-500">没有课程数据</p>';
+                } else {
+                    courses.forEach(course => {
+                        const courseEl = document.createElement('div');
+                        courseEl.className = 'bg-gray-50 p-3 rounded-md';
+                        courseEl.innerHTML = `
+                            <div class="font-medium">${course.name}</div>
+                            <div class="text-sm text-gray-600">ID: ${course.id}</div>
+                            <div class="text-sm text-gray-600">时间: ${course.time || 'N/A'}</div>
+                            <div class="text-sm text-gray-600">地点: ${course.location || 'N/A'}</div>
+                        `;
+                        listEl.appendChild(courseEl);
+                    });
+                }
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        });
+        
+        // 获取成绩列表
+        document.getElementById('fetchGrades').addEventListener('click', async () => {
+            const loadingEl = document.getElementById('gradesLoading');
+            const errorEl = document.getElementById('gradesError');
+            const listEl = document.getElementById('gradesList');
+            
+            loadingEl.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            listEl.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/grades`);
+                if (!response.ok) throw new Error('获取成绩失败');
+                
+                const grades = await response.json();
+                
+                if (grades.length === 0) {
+                    listEl.innerHTML = '<p class="text-gray-500">没有成绩数据</p>';
+                } else {
+                    grades.forEach(grade => {
+                        const gradeEl = document.createElement('div');
+                        gradeEl.className = 'bg-gray-50 p-3 rounded-md';
+                        
+                        // 根据评估类型设置不同的颜色
+                        let typeColor;
+                        switch (grade.type) {
+                            case 'quiz': typeColor = 'bg-purple-100 text-purple-800'; break;
+                            case 'exam': typeColor = 'bg-blue-100 text-blue-800'; break;
+                            case 'assignment': typeColor = 'bg-yellow-100 text-yellow-800'; break;
+                            case 'homework': typeColor = 'bg-green-100 text-green-800'; break;
+                            default: typeColor = 'bg-gray-100 text-gray-800';
+                        }
+                        
+                        gradeEl.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-medium">${grade.title}</div>
+                                    <div class="text-sm text-gray-600">学生: ${grade.student}</div>
+                                    <div class="text-sm text-gray-600">课程: ${grade.course}</div>
+                                    <div class="text-sm text-gray-600">日期: ${grade.date}</div>
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColor}">
+                                        ${grade.type}
+                                    </span>
+                                    <div class="mt-1 font-medium">${grade.score}/${grade.maxScore}</div>
+                                </div>
+                            </div>
+                            ${grade.feedback ? `<div class="mt-2 text-sm text-gray-700">${grade.feedback}</div>` : ''}
+                        `;
+                        listEl.appendChild(gradeEl);
+                    });
+                }
+            } catch (error) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        });
+        
+        // 添加单个成绩
+        document.getElementById('addGradeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loadingEl = document.getElementById('addGradeLoading');
+            const resultEl = document.getElementById('addGradeResult');
+            
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            
+            try {
+                const courseSelect = document.getElementById('courseId');
+                const studentSelect = document.getElementById('studentId');
+                
+                const gradeData = {
+                    date: document.getElementById('date').value,
+                    courseId: courseSelect.value,
+                    course: courseSelect.options[courseSelect.selectedIndex].text,
+                    studentId: parseInt(studentSelect.value),
+                    student: studentSelect.options[studentSelect.selectedIndex].text,
+                    type: document.getElementById('type').value,
+                    title: document.getElementById('title').value,
+                    score: parseInt(document.getElementById('score').value),
+                    maxScore: parseInt(document.getElementById('maxScore').value),
+                    feedback: document.getElementById('feedback').value
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/grades`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gradeData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '添加成绩失败');
+                }
+                
+                const result = await response.json();
+                
+                resultEl.innerHTML = `
+                    <div class="bg-green-100 text-green-700 p-4 rounded-md">
+                        成绩添加成功! ID: ${result.id}
+                    </div>
+                `;
+                resultEl.classList.remove('hidden');
+                
+                // 重置表单
+                document.getElementById('addGradeForm').reset();
+                
+                // 刷新成绩列表
+                document.getElementById('fetchGrades').click();
+                
+            } catch (error) {
+                resultEl.innerHTML = `
+                    <div class="bg-red-100 text-red-700 p-4 rounded-md">
+                        ${error.message}
+                    </div>
+                `;
+                resultEl.classList.remove('hidden');
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        });
+        
+        // 批量添加成绩 - 课程选择变更时更新学生列表
+        document.getElementById('batchCourseId').addEventListener('change', () => {
+            const courseId = document.getElementById('batchCourseId').value;
+            const studentsContainer = document.getElementById('batchStudents');
+            
+            studentsContainer.innerHTML = '';
+            
+            if (!courseId) return;
+            
+            // 根据所选课程显示相应的学生
+            const students = [];
+            if (courseId === 'phonics') {
+                students.push({ id: 1, name: 'Emily Wong' });
+                students.push({ id: 2, name: 'Thomas Chan' });
+                students.push({ id: 3, name: 'Sophie Lee' });
+            } else if (courseId === 'readers') {
+                students.push({ id: 4, name: 'Jason Lam' });
+                students.push({ id: 5, name: 'Alice Chen' });
+            }
+            
+            students.forEach(student => {
+                const studentEl = document.createElement('div');
+                studentEl.className = 'grid grid-cols-3 gap-2 items-center';
+                studentEl.innerHTML = `
+                    <div class="col-span-1">
+                        <span class="text-sm font-medium">${student.name}</span>
+                        <input type="hidden" name="studentId" value="${student.id}">
+                    </div>
+                    <div class="col-span-1">
+                        <input type="number" name="score" class="w-full border border-gray-300 rounded-md px-3 py-1 text-sm" 
+                               placeholder="得分" min="0" max="100" value="90">
+                    </div>
+                    <div class="col-span-1">
+                        <input type="text" name="feedback" class="w-full border border-gray-300 rounded-md px-3 py-1 text-sm" 
+                               placeholder="反馈" value="Good work">
+                    </div>
+                `;
+                studentsContainer.appendChild(studentEl);
+            });
+        });
+        
+        // 批量添加成绩
+        document.getElementById('addBatchGrades').addEventListener('click', async () => {
+            const loadingEl = document.getElementById('batchGradeLoading');
+            const resultEl = document.getElementById('batchGradeResult');
+            
+            loadingEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            
+            try {
+                const courseId = document.getElementById('batchCourseId').value;
+                const courseName = document.querySelector(`#batchCourseId option[value="${courseId}"]`).text;
+                const date = document.getElementById('batchDate').value;
+                const type = document.getElementById('batchType').value;
+                const title = document.getElementById('batchTitle').value;
+                const maxScore = parseInt(document.getElementById('batchMaxScore').value);
+                
+                if (!courseId || !date || !title || !maxScore) {
+                    throw new Error('请填写所有必填字段');
+                }
+                
+                // 收集学生成绩数据
+                const studentRows = document.querySelectorAll('#batchStudents > div');
+                if (studentRows.length === 0) {
+                    throw new Error('请选择课程以显示学生列表');
+                }
+                
+                const batchGrades = [];
+                
+                studentRows.forEach(row => {
+                    const studentId = parseInt(row.querySelector('input[name="studentId"]').value);
+                    const studentName = row.querySelector('.font-medium').textContent;
+                    const score = parseInt(row.querySelector('input[name="score"]').value);
+                    const feedback = row.querySelector('input[name="feedback"]').value;
+                    
+                    if (!isNaN(score)) {
+                        batchGrades.push({
+                            date,
+                            courseId,
+                            course: courseName,
+                            type,
+                            title,
+                            studentId,
+                            student: studentName,
+                            score,
+                            maxScore,
+                            feedback
+                        });
+                    }
+                });
+                
+                if (batchGrades.length === 0) {
+                    throw new Error('没有有效的学生成绩数据');
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/grades/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(batchGrades)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '批量添加成绩失败');
+                }
+                
+                const result = await response.json();
+                
+                resultEl.innerHTML = `
+                    <div class="bg-green-100 text-green-700 p-4 rounded-md">
+                        成功添加 ${result.length} 条成绩记录!
+                    </div>
+                `;
+                resultEl.classList.remove('hidden');
+                
+                // 重置表单
+                document.getElementById('batchCourseId').value = '';
+                document.getElementById('batchStudents').innerHTML = '';
+                
+                // 刷新成绩列表
+                document.getElementById('fetchGrades').click();
+                
+            } catch (error) {
+                resultEl.innerHTML = `
+                    <div class="bg-red-100 text-red-700 p-4 rounded-md">
+                        ${error.message}
+                    </div>
+                `;
+                resultEl.classList.remove('hidden');
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        });
+        
+        // 页面加载时自动获取课程和成绩数据
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('fetchCourses').click();
+            document.getElementById('fetchGrades').click();
+        });
+    </script>
+</body>
+</html>

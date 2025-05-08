@@ -30,6 +30,24 @@ def init_db():
         )
         cursor = connection.cursor()
         
+        # Check if grades table exists, create if not
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS grades (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            date DATE NOT NULL,
+            course VARCHAR(100) NOT NULL,
+            course_id VARCHAR(50) NOT NULL,
+            type ENUM('quiz', 'exam', 'assignment', 'homework') NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            student VARCHAR(100) NOT NULL,
+            student_id INT NOT NULL,
+            score INT NOT NULL,
+            max_score INT NOT NULL,
+            feedback TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        
         # Check if students table exists, create if not
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS students (
@@ -921,19 +939,29 @@ def get_grades():
         cursor = connection.cursor()
         
         try:
-            # Query all distinct grades
-            sql = "SELECT DISTINCT grade FROM students"
+            # Query all grades
+            sql = "SELECT * FROM grades ORDER BY date DESC"
             cursor.execute(sql)
             grades_data = cursor.fetchall()
             
-            # Extract grade list
-            grades = [grade['grade'] for grade in grades_data]
-            
-            # If no grade data in database, return default grades
-            if not grades:
-                grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']
+            # Format the grades data for frontend
+            formatted_grades = []
+            for grade in grades_data:
+                formatted_grades.append({
+                    'id': grade['id'],
+                    'date': grade['date'].strftime('%Y-%m-%d'),
+                    'course': grade['course'],
+                    'courseId': grade['course_id'],
+                    'type': grade['type'],
+                    'title': grade['title'],
+                    'student': grade['student'],
+                    'studentId': grade['student_id'],
+                    'score': grade['score'],
+                    'maxScore': grade['max_score'],
+                    'feedback': grade['feedback']
+                })
                 
-            return jsonify(grades), 200
+            return jsonify(formatted_grades), 200
             
         except Exception as e:
             print(f"Database error: {str(e)}")
@@ -1364,6 +1392,232 @@ def submit_attendance():
             
         except Exception as e:
             connection.rollback()
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+        finally:
+            # Close connection
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# API endpoint to add a grade
+@app.route('/grades', methods=['POST'])
+def add_grade():
+    try:
+        # Get JSON data
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data received"}), 400
+            
+        # Print received data for debugging
+        print(f"Received grade data: {data}")
+        
+        # Connect to database
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # Extract grade data from request
+            date = data.get('date')
+            course = data.get('course')
+            course_id = data.get('courseId')
+            grade_type = data.get('type')
+            title = data.get('title')
+            student = data.get('student')
+            student_id = data.get('studentId')
+            score = data.get('score')
+            max_score = data.get('maxScore')
+            feedback = data.get('feedback', '')
+            
+            # Validate required fields
+            if not all([date, course, course_id, grade_type, title, student, student_id, score, max_score]):
+                return jsonify({"error": "Missing required fields"}), 400
+            
+            # Insert data into grades table
+            sql = """
+            INSERT INTO grades (
+                date, course, course_id, type, title, student, student_id,
+                score, max_score, feedback
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+            """
+            cursor.execute(sql, (
+                date, course, course_id, grade_type, title, student, student_id,
+                score, max_score, feedback
+            ))
+                
+            # Get the ID of the inserted grade
+            grade_id = cursor.lastrowid
+            
+            connection.commit()
+            
+            # Return the created grade with ID
+            return jsonify({
+                "id": grade_id,
+                "date": date,
+                "course": course,
+                "courseId": course_id,
+                "type": grade_type,
+                "title": title,
+                "student": student,
+                "studentId": student_id,
+                "score": score,
+                "maxScore": max_score,
+                "feedback": feedback
+            }), 201
+            
+        except Exception as e:
+            connection.rollback()
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+        finally:
+            # Close connection
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# API endpoint to add multiple grades in batch
+@app.route('/grades/batch', methods=['POST'])
+def add_grades_batch():
+    try:
+        # Get JSON data
+        data = request.json
+        if not data or not isinstance(data, list):
+            return jsonify({"error": "No data received or data is not a list"}), 400
+            
+        # Print received data for debugging
+        print(f"Received batch grade data: {data}")
+        
+        # Connect to database
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            created_grades = []
+            
+            for grade_data in data:
+                # Extract grade data
+                date = grade_data.get('date')
+                course = grade_data.get('course')
+                course_id = grade_data.get('courseId')
+                grade_type = grade_data.get('type')
+                title = grade_data.get('title')
+                student = grade_data.get('student')
+                student_id = grade_data.get('studentId')
+                score = grade_data.get('score')
+                max_score = grade_data.get('maxScore')
+                feedback = grade_data.get('feedback', '')
+                
+                # Validate required fields
+                if not all([date, course, course_id, grade_type, title, student, student_id, score, max_score]):
+                    continue  # Skip invalid entries
+                
+                # Insert data into grades table
+                sql = """
+                INSERT INTO grades (
+                    date, course, course_id, type, title, student, student_id,
+                    score, max_score, feedback
+                ) VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                """
+                cursor.execute(sql, (
+                    date, course, course_id, grade_type, title, student, student_id,
+                    score, max_score, feedback
+                ))
+                    
+                # Get the ID of the inserted grade
+                grade_id = cursor.lastrowid
+                
+                # Add to created grades list
+                created_grades.append({
+                    "id": grade_id,
+                    "date": date,
+                    "course": course,
+                    "courseId": course_id,
+                    "type": grade_type,
+                    "title": title,
+                    "student": student,
+                    "studentId": student_id,
+                    "score": score,
+                    "maxScore": max_score,
+                    "feedback": feedback
+                })
+            
+            connection.commit()
+            return jsonify(created_grades), 201
+            
+        except Exception as e:
+            connection.rollback()
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+        finally:
+            # Close connection
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# API endpoint to get student grade levels (renamed from the original get_grades)
+@app.route('/student-grade-levels', methods=['GET'])
+def get_student_grade_levels():
+    try:
+        # Connect to database
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # Query all distinct grades
+            sql = "SELECT DISTINCT grade FROM students"
+            cursor.execute(sql)
+            grades_data = cursor.fetchall()
+            
+            # Extract grade list
+            grades = [grade['grade'] for grade in grades_data]
+            
+            # If no grade data in database, return default grades
+            if not grades:
+                grades = ['Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']
+                
+            return jsonify(grades), 200
+            
+        except Exception as e:
             print(f"Database error: {str(e)}")
             return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
