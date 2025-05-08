@@ -4,7 +4,7 @@ import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, parseISO } from 'da
 import axios from 'axios';
 import { zhCN } from 'date-fns/locale';
 
-// 定义接口
+// Define interfaces
 interface Course {
   id: number | string;
   name: string;
@@ -51,16 +51,16 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // 从API获取课程数据
+  // Fetch course data from API
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        // 尝试从API获取数据
+        // Try to fetch data from API
         try {
           const response = await axios.get('http://localhost:9999/courses');
           
-          // 转换课程数据格式
+          // Format course data
           const formattedCourses = response.data.map((course: any) => ({
             id: course.id,
             name: course.name,
@@ -71,23 +71,23 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           
           setCourses(formattedCourses);
           
-          // 构建班级数据
+          // Build class data
           const formattedClasses = response.data.map((course: any) => {
-            // 获取该课程的学生
+            // Get students for this course
             return {
               id: course.id,
               course: course.name,
               schedule: course.schedule || 'N/A',
               time: course.time || 'N/A',
               location: course.location || 'N/A',
-              students: [] // 初始化为空数组，后续会填充
+              students: [] // Initialize as empty array, will fill later
             };
           });
           
-          // 获取学生数据并分配到相应的班级
+          // Fetch students and assign to classes
           const studentsResponse = await axios.get('http://localhost:9999/students');
           
-          // 更新班级中的学生数据
+          // Update students in classes
           const classesWithStudents = formattedClasses.map((class_: Class) => {
             const classStudents = studentsResponse.data.filter((student: any) =>
               student.courses.includes(class_.id.toString())
@@ -108,10 +108,10 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           setClasses(classesWithStudents);
           setError(null);
         } catch (err) {
-          console.error('获取课程数据失败:', err);
-          setError('获取课程数据失败，使用默认数据');
+          console.error('Failed to fetch course data:', err);
+          setError('Failed to fetch course data, using default data');
           
-          // 如果API调用失败，使用默认数据
+          // Use default data if API fails
           const defaultCourses = [
             { id: 'phonics', name: 'Phonics Foundation', schedule: 'Mon, Wed, Fri', time: '10:00 AM - 11:00 AM', location: 'Room 101' },
             { id: 'readers', name: 'Young Readers', schedule: 'Tue, Thu', time: '11:30 AM - 12:30 PM', location: 'Online' }
@@ -177,12 +177,12 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
   };
 
   const handleSubmit = async () => {
-    if (window.confirm('确定要提交出勤记录吗？')) {
-      if (window.confirm('请再次确认提交出勤记录。')) {
+    if (window.confirm('Are you sure you want to submit the attendance records?')) {
+      if (window.confirm('Please confirm again to submit the attendance records.')) {
         setSubmitting(true);
         
         try {
-          // 准备提交数据
+          // Prepare data to submit
           const records = Object.entries(attendanceData).map(([studentId, data]) => {
             const student = selectedClass?.students.find(s => s.id.toString() === studentId);
             
@@ -199,18 +199,17 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             };
           });
           
-          // 提交到API
-          // 注意：这里应该调用实际的API，但由于没有实际的后端API，我们只是模拟提交
-          console.log('提交出勤数据:', records);
+          // Submit to API (simulate)
+          console.log('Submitting attendance data:', records);
           
-          // 模拟API调用延迟
+          // Simulate API delay
           await new Promise(resolve => setTimeout(resolve, 1000));
           
-          alert('出勤记录提交成功！');
-          onCancel(); // 提交成功后返回主页面
+          alert('Attendance records submitted successfully!');
+          onCancel(); // Return to main page after submit
         } catch (error) {
-          console.error('提交出勤记录失败:', error);
-          alert('提交出勤记录失败，请重试。');
+          console.error('Failed to submit attendance records:', error);
+          alert('Failed to submit attendance records, please try again.');
         } finally {
           setSubmitting(false);
         }
@@ -248,7 +247,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
         </div>
       ) : (
         <>
-          {/* 课程和日期选择 */}
+          {/* Course and date selection */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -261,7 +260,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                     const class_ = classes.find(c => c.id.toString() === e.target.value);
                     setSelectedClass(class_ || null);
                     
-                    // 初始化所有学生的出勤数据
+                    // Initialize attendance data for all students
                     if (class_) {
                       const initialData = class_.students.reduce((acc: any, student: any) => {
                         acc[student.id] = {
@@ -438,15 +437,15 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 从API获取数据
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // 尝试从API获取数据
+        // Try to fetch data from API
         try {
-          // 获取课程数据
+          // Fetch courses
           const coursesResponse = await axios.get('http://localhost:9999/courses');
           const formattedCourses = coursesResponse.data.map((course: any) => ({
             id: course.id,
@@ -454,7 +453,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
           }));
           setCourses(formattedCourses);
           
-          // 获取学生数据
+          // Fetch students
           const studentsResponse = await axios.get('http://localhost:9999/students');
           const formattedStudents = studentsResponse.data.map((student: any) => ({
             id: student.id,
@@ -462,12 +461,11 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
           }));
           setStudents(formattedStudents);
           
-          // 获取出勤记录数据
-          // 注意：这里应该有一个实际的API端点来获取出勤记录，但由于没有实际的后端API，我们使用模拟数据
+          // Fetch attendance records (simulate)
           // const attendanceResponse = await axios.get('http://localhost:9999/attendance');
           // setAttendanceRecords(attendanceResponse.data);
           
-          // 使用模拟数据
+          // Use mock data
           const mockAttendanceRecords = [
             {
               id: 1,
@@ -477,7 +475,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               status: 'present' as const,
               arrivalTime: '09:55 AM',
               leavingTime: '11:00 AM',
-              notes: '课堂参与度高'
+              notes: 'Active participation in class'
             },
             {
               id: 2,
@@ -485,7 +483,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               course: formattedCourses[0]?.name || 'Phonics Foundation',
               student: formattedStudents[1]?.name || 'Thomas Chan',
               status: 'absent' as const,
-              notes: '家长已通知 - 病假'
+              notes: 'Parent notified - sick leave'
             },
             {
               id: 3,
@@ -495,17 +493,17 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               status: 'late' as const,
               arrivalTime: '10:15 AM',
               leavingTime: '11:30 AM',
-              notes: '迟到15分钟，交通拥堵'
+              notes: '15 minutes late, traffic jam'
             }
           ];
           
           setAttendanceRecords(mockAttendanceRecords);
           setError(null);
         } catch (err) {
-          console.error('获取数据失败:', err);
-          setError('获取数据失败，使用默认数据');
+          console.error('Failed to fetch data:', err);
+          setError('Failed to fetch data, using default data');
           
-          // 如果API调用失败，使用默认数据
+          // Use default data if API fails
           const defaultCourses = [
             { id: 'phonics', name: 'Phonics Foundation' },
             { id: 'readers', name: 'Young Readers' }
@@ -528,7 +526,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               status: 'present' as const,
               arrivalTime: '09:55 AM',
               leavingTime: '11:00 AM',
-              notes: '课堂参与度高'
+              notes: 'Active participation in class'
             },
             {
               id: 2,
@@ -536,7 +534,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               course: 'Phonics Foundation',
               student: 'Thomas Chan',
               status: 'absent' as const,
-              notes: '家长已通知 - 病假'
+              notes: 'Parent notified - sick leave'
             },
             {
               id: 3,
@@ -546,7 +544,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
               status: 'late' as const,
               arrivalTime: '10:15 AM',
               leavingTime: '11:30 AM',
-              notes: '迟到15分钟，交通拥堵'
+              notes: '15 minutes late, traffic jam'
             }
           ];
           
@@ -576,14 +574,14 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
     const matchesStudent = selectedStudent === 'all' || record.student === students.find(s => s.id.toString() === selectedStudent)?.name;
     const matchesStatus = selectedStatus === 'all' || record.status === selectedStatus;
     
-    // 检查日期是否在选定的周内
+    // Check if date is in selected week
     const recordDate = parseISO(record.date);
     const isInSelectedWeek = recordDate >= weekStart && recordDate <= weekEnd;
     
     return matchesCourse && matchesStudent && matchesStatus && isInSelectedWeek;
   });
 
-  // 计算出勤率统计
+  // Calculate attendance statistics
   const calculateAttendanceStats = () => {
     if (attendanceRecords.length === 0) return { present: 0, late: 0, absent: 0 };
     
@@ -602,13 +600,13 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
   const stats = calculateAttendanceStats();
 
   const handleExportAttendance = () => {
-    // 创建CSV内容
-    const headers = ['日期', '课程', '学生', '状态', '到达时间', '离开时间', '备注'];
+    // Create CSV content
+    const headers = ['Date', 'Course', 'Student', 'Status', 'Arrival Time', 'Leaving Time', 'Notes'];
     const rows = filteredRecords.map(record => [
       record.date,
       record.course,
       record.student,
-      record.status === 'present' ? '出席' : record.status === 'late' ? '迟到' : '缺席',
+      record.status === 'present' ? 'Present' : record.status === 'late' ? 'Late' : 'Absent',
       record.arrivalTime || '',
       record.leavingTime || '',
       record.notes || ''
@@ -619,12 +617,12 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
       ...rows.map(row => row.join(','))
     ].join('\n');
     
-    // 创建Blob并下载
+    // Create Blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `出勤记录_${format(weekStart, 'yyyyMMdd')}_${format(weekEnd, 'yyyyMMdd')}.csv`);
+    link.setAttribute('download', `Attendance_Records_${format(weekStart, 'yyyyMMdd')}_${format(weekEnd, 'yyyyMMdd')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -668,7 +666,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
         </div>
       ) : (
         <>
-          {/* 出勤率统计 */}
+          {/* Attendance statistics */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Attendance Statistics</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -702,7 +700,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
             </div>
           </div>
 
-          {/* 筛选器 */}
+          {/* Filters */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <select
@@ -768,7 +766,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
         </>
       )}
 
-      {/* 出勤记录表格 */}
+      {/* Attendance records table */}
       {!loading && (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {filteredRecords.length === 0 ? (
