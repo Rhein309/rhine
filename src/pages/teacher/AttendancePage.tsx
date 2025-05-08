@@ -183,30 +183,39 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
         
         try {
           // Prepare data to submit
-          const records = Object.entries(attendanceData).map(([studentId, data]) => {
-            const student = selectedClass?.students.find(s => s.id.toString() === studentId);
-            
-            return {
-              courseId: selectedClass?.id,
-              courseName: selectedClass?.course,
-              studentId: studentId,
-              studentName: student?.name,
-              date: selectedDate,
-              status: data.status,
-              arrivalTime: data.arrivalTime || '',
-              leavingTime: data.leavingTime || '',
-              notes: data.notes
-            };
-          });
+          const records = Object.entries(attendanceData)
+            .filter(([_, data]) => data.status !== null) // Only submit records with a status
+            .map(([studentId, data]) => {
+              const student = selectedClass?.students.find(s => s.id.toString() === studentId);
+              
+              return {
+                courseId: selectedClass?.id,
+                courseName: selectedClass?.course,
+                studentId: studentId,
+                studentName: student?.name,
+                date: selectedDate,
+                status: data.status,
+                arrivalTime: data.arrivalTime || '',
+                leavingTime: data.leavingTime || '',
+                notes: data.notes || ''
+              };
+            });
           
-          // Submit to API (simulate)
+          if (records.length === 0) {
+            alert('No attendance records to submit. Please mark at least one student.');
+            setSubmitting(false);
+            return;
+          }
+          
+          // Submit to API
           console.log('Submitting attendance data:', records);
           
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const response = await axios.post('http://localhost:9999/attendance', records);
           
-          alert('Attendance records submitted successfully!');
-          onCancel(); // Return to main page after submit
+          if (response.status === 200) {
+            alert('Attendance records submitted successfully!');
+            onCancel(); // Return to main page after submit
+          }
         } catch (error) {
           console.error('Failed to submit attendance records:', error);
           alert('Failed to submit attendance records, please try again.');
@@ -461,43 +470,21 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
           }));
           setStudents(formattedStudents);
           
-          // Fetch attendance records (simulate)
-          // const attendanceResponse = await axios.get('http://localhost:9999/attendance');
-          // setAttendanceRecords(attendanceResponse.data);
+          // Fetch attendance records for the current week
+          const weekStart = format(startOfWeek(currentWeek, { locale: zhCN }), 'yyyy-MM-dd');
+          const weekEnd = format(endOfWeek(currentWeek, { locale: zhCN }), 'yyyy-MM-dd');
           
-          // Use mock data
-          const mockAttendanceRecords = [
-            {
-              id: 1,
-              date: '2025-01-15',
-              course: formattedCourses[0]?.name || 'Phonics Foundation',
-              student: formattedStudents[0]?.name || 'Emily Wong',
-              status: 'present' as const,
-              arrivalTime: '09:55 AM',
-              leavingTime: '11:00 AM',
-              notes: 'Active participation in class'
-            },
-            {
-              id: 2,
-              date: '2025-01-15',
-              course: formattedCourses[0]?.name || 'Phonics Foundation',
-              student: formattedStudents[1]?.name || 'Thomas Chan',
-              status: 'absent' as const,
-              notes: 'Parent notified - sick leave'
-            },
-            {
-              id: 3,
-              date: '2025-01-16',
-              course: formattedCourses[1]?.name || 'Young Readers',
-              student: formattedStudents[2]?.name || 'Sophie Lee',
-              status: 'late' as const,
-              arrivalTime: '10:15 AM',
-              leavingTime: '11:30 AM',
-              notes: '15 minutes late, traffic jam'
+          const attendanceResponse = await axios.get('http://localhost:9999/attendance', {
+            params: {
+              dateFrom: weekStart,
+              dateTo: weekEnd,
+              courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
+              studentId: selectedStudent !== 'all' ? selectedStudent : undefined,
+              status: selectedStatus !== 'all' ? selectedStatus : undefined
             }
-          ];
+          });
           
-          setAttendanceRecords(mockAttendanceRecords);
+          setAttendanceRecords(attendanceResponse.data);
           setError(null);
         } catch (err) {
           console.error('Failed to fetch data:', err);
@@ -556,7 +543,7 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
     };
 
     fetchData();
-  }, []);
+  }, [currentWeek, selectedCourse, selectedStudent, selectedStatus]);
 
   const handlePreviousWeek = () => {
     setCurrentWeek(prev => subWeeks(prev, 1));
@@ -565,6 +552,39 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
   const handleNextWeek = () => {
     setCurrentWeek(prev => addWeeks(prev, 1));
   };
+  
+  // Refresh attendance data when filters change
+  useEffect(() => {
+    // This will be triggered when any of the dependencies change
+    const fetchAttendanceData = async () => {
+      try {
+        setLoading(true);
+        
+        const weekStart = format(startOfWeek(currentWeek, { locale: zhCN }), 'yyyy-MM-dd');
+        const weekEnd = format(endOfWeek(currentWeek, { locale: zhCN }), 'yyyy-MM-dd');
+        
+        const response = await axios.get('http://localhost:9999/attendance', {
+          params: {
+            dateFrom: weekStart,
+            dateTo: weekEnd,
+            courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
+            studentId: selectedStudent !== 'all' ? selectedStudent : undefined,
+            status: selectedStatus !== 'all' ? selectedStatus : undefined
+          }
+        });
+        
+        setAttendanceRecords(response.data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch attendance data:', err);
+        setError('Failed to fetch attendance data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAttendanceData();
+  }, [currentWeek, selectedCourse, selectedStudent, selectedStatus]);
 
   const weekStart = startOfWeek(currentWeek, { locale: zhCN });
   const weekEnd = endOfWeek(currentWeek, { locale: zhCN });
@@ -612,9 +632,17 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
       record.notes || ''
     ]);
     
+    // Escape CSV values to handle commas and quotes
+    const escapeCSV = (value: string) => {
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    };
+    
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.join(','))
+      ...rows.map(row => row.map(cell => escapeCSV(String(cell))).join(','))
     ].join('\n');
     
     // Create Blob and download
@@ -626,6 +654,11 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    // Clean up
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
   return (

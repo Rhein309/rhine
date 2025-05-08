@@ -55,6 +55,23 @@ def init_db():
         )
         """)
         
+        # Check if attendance records table exists, create if not
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS attendance (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            date DATE NOT NULL,
+            course_id VARCHAR(50) NOT NULL,
+            course_name VARCHAR(100) NOT NULL,
+            student_id VARCHAR(50) NOT NULL,
+            student_name VARCHAR(100) NOT NULL,
+            status ENUM('present', 'absent', 'late') NOT NULL,
+            arrival_time VARCHAR(20),
+            leaving_time VARCHAR(20),
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """)
+        
         # Check if teachers table exists, create if not
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS teachers (
@@ -1173,6 +1190,180 @@ def get_user_enrollments():
             return jsonify(formatted_enrollments), 200
             
         except Exception as e:
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+        finally:
+            # Close connection
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# API endpoint to get attendance records
+@app.route('/attendance', methods=['GET'])
+def get_attendance():
+    try:
+        # Get query parameters
+        course_id = request.args.get('courseId')
+        student_id = request.args.get('studentId')
+        date_from = request.args.get('dateFrom')
+        date_to = request.args.get('dateTo')
+        status = request.args.get('status')
+        
+        # Connect to database
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # Build query with filters
+            sql = "SELECT * FROM attendance WHERE 1=1"
+            params = []
+            
+            if course_id:
+                sql += " AND course_id = %s"
+                params.append(course_id)
+                
+            if student_id:
+                sql += " AND student_id = %s"
+                params.append(student_id)
+                
+            if date_from:
+                sql += " AND date >= %s"
+                params.append(date_from)
+                
+            if date_to:
+                sql += " AND date <= %s"
+                params.append(date_to)
+                
+            if status:
+                sql += " AND status = %s"
+                params.append(status)
+                
+            # Order by date descending
+            sql += " ORDER BY date DESC"
+            
+            # Execute query
+            cursor.execute(sql, params)
+            records = cursor.fetchall()
+            
+            # Format records for frontend
+            formatted_records = []
+            for record in records:
+                formatted_records.append({
+                    'id': record['id'],
+                    'date': record['date'].strftime('%Y-%m-%d'),
+                    'course': record['course_name'],
+                    'student': record['student_name'],
+                    'status': record['status'],
+                    'arrivalTime': record['arrival_time'],
+                    'leavingTime': record['leaving_time'],
+                    'notes': record['notes']
+                })
+                
+            return jsonify(formatted_records), 200
+            
+        except Exception as e:
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+        finally:
+            # Close connection
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# API endpoint to submit attendance records
+@app.route('/attendance', methods=['POST'])
+def submit_attendance():
+    try:
+        # Get JSON data
+        data = request.json
+        if not data:
+            return jsonify({"error": "No data received"}), 400
+            
+        # Print received data for debugging
+        print(f"Received attendance data: {data}")
+        
+        # Connect to database
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # Check if it's a single record or multiple records
+            records = data if isinstance(data, list) else [data]
+            
+            for record in records:
+                # Extract attendance data
+                date = record.get('date')
+                course_id = record.get('courseId')
+                course_name = record.get('courseName')
+                student_id = record.get('studentId')
+                student_name = record.get('studentName')
+                status = record.get('status')
+                arrival_time = record.get('arrivalTime', '')
+                leaving_time = record.get('leavingTime', '')
+                notes = record.get('notes', '')
+                
+                # Validate required fields
+                if not all([date, course_id, course_name, student_id, student_name, status]):
+                    return jsonify({"error": "Missing required fields"}), 400
+                
+                # Check if record already exists for this student, course and date
+                sql_check = """
+                SELECT id FROM attendance
+                WHERE date = %s AND course_id = %s AND student_id = %s
+                """
+                cursor.execute(sql_check, (date, course_id, student_id))
+                existing = cursor.fetchone()
+                
+                if existing:
+                    # Update existing record
+                    sql = """
+                    UPDATE attendance SET
+                    status = %s, arrival_time = %s, leaving_time = %s, notes = %s
+                    WHERE id = %s
+                    """
+                    cursor.execute(sql, (status, arrival_time, leaving_time, notes, existing['id']))
+                else:
+                    # Insert new record
+                    sql = """
+                    INSERT INTO attendance (
+                        date, course_id, course_name, student_id, student_name,
+                        status, arrival_time, leaving_time, notes
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(sql, (
+                        date, course_id, course_name, student_id, student_name,
+                        status, arrival_time, leaving_time, notes
+                    ))
+            
+            connection.commit()
+            return jsonify({"message": "Attendance records submitted successfully"}), 200
+            
+        except Exception as e:
+            connection.rollback()
             print(f"Database error: {str(e)}")
             return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
