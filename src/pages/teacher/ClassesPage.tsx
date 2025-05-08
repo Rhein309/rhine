@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Users, Clock, MapPin, Check, X } from 'lucide-react';
 import axios from 'axios';
 
-// 定义课程和班级的接口
+// Define interfaces for courses and classes
 interface Course {
   id: number | string;
   name: string;
@@ -36,14 +36,14 @@ const ClassesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 从API获取课程数据
+  // Fetch course data from API
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         setLoading(true);
         const response = await axios.get('http://localhost:9999/courses');
         
-        // 转换课程数据格式
+        // Format course data
         const formattedCourses = response.data.map((course: any) => ({
           id: course.id,
           name: course.name
@@ -51,16 +51,16 @@ const ClassesPage = () => {
         
         setCourses(formattedCourses);
         
-        // 构建班级数据
+        // Build class data
         const formattedClasses = await Promise.all(response.data.map(async (course: any) => {
-          // 为每个课程获取学生信息
+          // Fetch student info for each course
           let students: Student[] = [];
           try {
             const studentsResponse = await axios.get(`http://localhost:9999/course-students/${course.id}`);
             students = studentsResponse.data;
           } catch (error) {
-            console.error(`获取课程 ${course.id} 的学生信息失败:`, error);
-            students = []; // 如果获取失败，使用空数组
+            console.error(`Failed to fetch students for course ${course.id}:`, error);
+            students = [];
           }
           
           return {
@@ -76,10 +76,10 @@ const ClassesPage = () => {
         setClasses(formattedClasses);
         setError(null);
       } catch (err) {
-        console.error('获取课程数据失败:', err);
-        setError('获取课程数据失败，请稍后再试');
+        console.error('Failed to fetch course data:', err);
+        setError('Failed to fetch course data. Please try again later.');
         
-        // 如果API调用失败，使用默认数据（仅用于开发/测试）
+        // Use default data if API call fails (for development/testing only)
         setCourses([
           { id: 'phonics', name: 'Phonics Foundation' },
           { id: 'readers', name: 'Young Readers' }
@@ -119,16 +119,16 @@ const ClassesPage = () => {
   }, []);
 
   const filteredClasses = classes.filter(class_ => {
-    // 课程名称匹配
+    // Course name match
     const matchesCourse = selectedCourse === 'all' ||
                          class_.course === courses.find(c => c.id === selectedCourse)?.name;
     
-    // 如果没有搜索查询，只检查课程匹配
+    // If no search query, only check course match
     if (searchQuery === '') {
       return matchesCourse;
     }
     
-    // 如果有学生数据，检查学生或家长名称是否匹配搜索查询
+    // If there are students, check if student or parent name matches search query
     if (class_.students && class_.students.length > 0) {
       const matchesStudent = class_.students.some(student =>
         student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -137,7 +137,7 @@ const ClassesPage = () => {
       return matchesCourse && matchesStudent;
     }
     
-    // 如果没有学生数据，只检查课程名称是否匹配搜索查询
+    // If no students, only check if course name matches search query
     return matchesCourse && class_.course.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
@@ -301,7 +301,7 @@ const ClassesPage = () => {
           <div className="space-y-6">
             {filteredClasses.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-                <p className="text-gray-500">没有找到符合条件的课程</p>
+                <p className="text-gray-500">No classes found matching your criteria</p>
               </div>
             ) : (
               filteredClasses.map(class_ => (

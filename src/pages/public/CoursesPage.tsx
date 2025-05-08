@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Clock, Users, Calendar } from 'lucide-react';
 
-// 定义API返回的课程数据类型
+// Define the course data type returned by the API
 interface ApiCourse {
   id: number;
   name: string;
@@ -18,7 +18,7 @@ interface ApiCourse {
   description?: string;
 }
 
-// 定义组件使用的课程数据类型
+// Define the course data type used by the component
 interface Course {
   id: number;
   name: string;
@@ -51,30 +51,30 @@ const CoursesPage = () => {
         const response = await fetch('http://localhost:9999/courses');
         
         if (!response.ok) {
-          throw new Error(`获取课程数据失败: ${response.status}`);
+          throw new Error(`Failed to fetch course data: ${response.status}`);
         }
         
         const data = await response.json() as ApiCourse[];
         
-        // 将API返回的数据格式转换为组件需要的格式
+        // Convert the API data format to the format required by the component
         const formattedCourses = data.map((course: ApiCourse): Course => ({
           id: course.id,
           name: course.name,
-          // 根据location判断课程类型（在线/线下）
+          // Determine course type (online/offline) based on location
           type: course.location.toLowerCase().includes('online') ? 'online' : 'offline',
           ageRange: course.ageRange,
           description: course.description || `${course.name} - ${course.level} level course for ages ${course.ageRange}`,
           schedule: course.schedule,
           time: course.time,
           maxStudents: course.maxStudents,
-          duration: "12 weeks", // 假设所有课程都是12周
+          duration: "12 weeks", // Assume all courses are 12 weeks
           fee: course.fee
         }));
         
         setCourses(formattedCourses);
       } catch (err: any) {
-        console.error('获取课程数据时出错:', err);
-        setError(err.message || '未知错误');
+        console.error('Error fetching course data:', err);
+        setError(err.message || 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -97,14 +97,14 @@ const CoursesPage = () => {
       {loading && (
         <div className="text-center py-10">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-purple-500 border-r-transparent"></div>
-          <p className="mt-2 text-gray-600">加载课程数据中...</p>
+          <p className="mt-2 text-gray-600">Loading course data...</p>
         </div>
       )}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-          <p>加载课程数据时出错: {error}</p>
-          <p>请稍后再试或联系管理员。</p>
+          <p>Error loading course data: {error}</p>
+          <p>Please try again later or contact the administrator.</p>
         </div>
       )}
 
@@ -204,7 +204,7 @@ const CoursesPage = () => {
             </div>
           ) : (
             <div className="text-center py-10">
-              <p className="text-gray-600">没有找到符合条件的课程。</p>
+              <p className="text-gray-600">No courses found matching the criteria.</p>
             </div>
           )}
         </>

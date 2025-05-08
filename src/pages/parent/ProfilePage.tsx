@@ -51,18 +51,18 @@ const ProfilePage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (window.confirm('确定要保存这些更改吗？')) {
-      // 这里可以添加保存逻辑，例如调用API更新用户资料
-      console.log('保存个人资料更改:', editData);
+    if (window.confirm('Are you sure you want to save these changes?')) {
+      // You can add save logic here, such as calling an API to update the user profile
+      console.log('Save profile changes:', editData);
       setShowEditModal(false);
     }
   };
 
   const handleChildSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (window.confirm('确定要保存孩子信息的更改吗？')) {
-      // 这里可以添加保存逻辑，例如调用API更新孩子信息
-      console.log('保存孩子信息更改:', childrenData[editChildIndex as number]);
+    if (window.confirm('Are you sure you want to save the changes to the child information?')) {
+      // You can add save logic here, such as calling an API to update child info
+      console.log('Save child info changes:', childrenData[editChildIndex as number]);
       setEditChildIndex(null);
     }
   };

@@ -53,7 +53,7 @@ const MaterialsPage = () => {
           }));
           setCourses(formattedCourses);
         } catch (err) {
-          console.error('获取课程数据失败:', err);
+          console.error('fail to fetch course data:', err);
           // 如果API调用失败，使用默认数据
           setCourses([
             { id: 'phonics', name: 'Phonics Foundation' },

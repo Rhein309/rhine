@@ -4,7 +4,7 @@ import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, parseISO, subMonths
 import { zhCN } from 'date-fns/locale';
 import axios from 'axios';
 
-// 定义接口
+// Define interfaces
 interface AttendanceRecord {
   id: number | string;
   date: string;
@@ -37,19 +37,19 @@ const AttendancePage = () => {
   const [courses, setCourses] = useState<string[]>([]);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
 
-  // 从API获取数据
+  // Fetch data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // 尝试从API获取数据
+        // Try to fetch data from API
         try {
-          // 在实际应用中，这里应该调用API获取数据
+          // In real application, call API here
           // const response = await axios.get('http://localhost:9999/parent/attendance');
           // setAttendanceRecords(response.data);
           
-          // 使用模拟数据
+          // Use mock data
           const mockRecords: AttendanceRecord[] = [
             {
               id: 1,
@@ -143,11 +143,11 @@ const AttendancePage = () => {
           
           setAttendanceRecords(mockRecords);
           
-          // 提取所有课程
+          // Extract all courses
           const uniqueCourses = Array.from(new Set(mockRecords.map(record => record.course)));
           setCourses(uniqueCourses);
           
-          // 生成月度统计数据
+          // Generate monthly statistics data
           generateMonthlyStats(mockRecords);
           
           setError(null);
@@ -163,18 +163,18 @@ const AttendancePage = () => {
     fetchData();
   }, []);
 
-  // 生成月度统计数据
+  // Generate monthly statistics data
   const generateMonthlyStats = (records: AttendanceRecord[]) => {
     const now = new Date();
     const stats: MonthlyStats[] = [];
     
-    // 生成过去6个月的统计数据
+    // Generate statistics for the past 6 months
     for (let i = 5; i >= 0; i--) {
       const monthDate = subMonths(now, i);
       const monthStr = format(monthDate, 'yyyy-MM');
       const monthName = format(monthDate, 'MMM yyyy', { locale: zhCN });
       
-      // 筛选当月记录
+      // Filter records for the month
       const monthRecords = records.filter(record => record.date.startsWith(monthStr));
       const total = monthRecords.length;
       const present = monthRecords.filter(r => r.status === 'present').length;
@@ -204,19 +204,19 @@ const AttendancePage = () => {
   const weekStart = startOfWeek(currentWeek, { locale: zhCN });
   const weekEnd = endOfWeek(currentWeek, { locale: zhCN });
 
-  // 筛选记录
+  // Filter records
   const filteredRecords = attendanceRecords.filter(record => {
     const matchesCourse = selectedCourse === 'all' || record.course === selectedCourse;
     const matchesStatus = selectedStatus === 'all' || record.status === selectedStatus;
     
-    // 检查日期是否在选定的周内
+    // Check if date is within the selected week
     const recordDate = parseISO(record.date);
     const isInSelectedWeek = recordDate >= weekStart && recordDate <= weekEnd;
     
     return matchesCourse && matchesStatus && isInSelectedWeek;
   });
 
-  // 计算出勤率统计
+  // Calculate attendance statistics
   const calculateAttendanceStats = () => {
     if (attendanceRecords.length === 0) return { present: 0, late: 0, absent: 0 };
     
@@ -235,7 +235,7 @@ const AttendancePage = () => {
   const stats = calculateAttendanceStats();
 
   const handleExportAttendance = () => {
-    // 创建CSV内容
+    // Create CSV content
     const headers = ['Date', 'Time', 'Course', 'Teacher', 'Location', 'Leaving Time', 'Status', 'Notes'];
     const rows = filteredRecords.map(record => [
       record.date,
@@ -253,7 +253,7 @@ const AttendancePage = () => {
       ...rows.map(row => row.join(','))
     ].join('\n');
     
-    // 创建Blob并下载
+    // Create Blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

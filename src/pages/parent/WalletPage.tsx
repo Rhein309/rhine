@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, Receipt, Gift, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
-// 定义交易记录接口
+// Define transaction record interface
 interface Transaction {
   id: number;
   date: string;
@@ -24,7 +24,7 @@ const WalletPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 获取交易记录
+  // Fetch transaction records
   useEffect(() => {
     const fetchTransactions = async () => {
       if (!profile || !profile.id) {
@@ -35,50 +35,50 @@ const WalletPage = () => {
       try {
         setLoading(true);
         
-        // 获取用户已报名的课程
+        // Fetch user's enrolled courses
         const enrollmentsResponse = await fetch(`http://localhost:9999/user-enrollments?parentId=${profile.id}`);
         
         if (!enrollmentsResponse.ok) {
-          throw new Error(`获取报名数据失败: ${enrollmentsResponse.status}`);
+          throw new Error(`Failed to fetch enrollment data: ${enrollmentsResponse.status}`);
         }
         
         const enrollmentsData = await enrollmentsResponse.json();
         
-        // 获取所有课程信息
+        // Fetch all course information
         const coursesResponse = await fetch('http://localhost:9999/courses');
         
         if (!coursesResponse.ok) {
-          throw new Error(`获取课程数据失败: ${coursesResponse.status}`);
+          throw new Error(`Failed to fetch course data: ${coursesResponse.status}`);
         }
         
         const coursesData = await coursesResponse.json();
         
-        // 将报名信息和课程信息结合，生成交易记录
+        // Combine enrollment and course info to generate transaction records
         const transactionData: Transaction[] = enrollmentsData.map((enrollment: any, index: number) => {
           const courseId = Number(enrollment.extendedProps.courseId);
           const course = coursesData.find((c: any) => c.id === courseId);
           
           if (!course) return null;
           
-          // 从课程费用字符串中提取数字
+          // Extract number from course fee string
           const feeMatch = course.fee.match(/\d+/);
           const feeAmount = feeMatch ? parseInt(feeMatch[0]) : 0;
           
-          // 假设教材费用是课程费用的10%
+          // Assume material fee is 10% of course fee
           const materialFee = Math.round(feeAmount * 0.1);
           const totalAmount = feeAmount + materialFee;
           
           return {
             id: index + 1,
             date: enrollment.start || new Date().toISOString().split('T')[0],
-            description: `${course.name} - ${new Date().getFullYear()}年${new Date().getMonth() + 1}月`,
+            description: `${course.name} - ${new Date().getFullYear()} Year ${new Date().getMonth() + 1} Month`,
             amount: totalAmount,
             status: 'paid',
             invoice: `#INV-${new Date().getFullYear()}-${String(index + 1).padStart(3, '0')}`,
             details: {
               items: [
-                { name: '课程费用', amount: feeAmount },
-                { name: '教材费用', amount: materialFee }
+                { name: 'Course Fee', amount: feeAmount },
+                { name: 'Material Fee', amount: materialFee }
               ],
               paymentMethod: index % 2 === 0 ? 'Visa ending in 4242' : 'MasterCard ending in 5555'
             }
@@ -87,8 +87,8 @@ const WalletPage = () => {
         
         setTransactions(transactionData);
       } catch (err: any) {
-        console.error('获取交易记录时出错:', err);
-        setError(err.message || '未知错误');
+        console.error('Error fetching transactions:', err);
+        setError(err.message || 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -229,7 +229,7 @@ const WalletPage = () => {
                           <div className="space-y-2">
                             {transaction.details.items.map((item, index) => (
                               <div key={index} className="flex justify-between text-sm">
-                                <span className="text-gray-600">{item.name === '课程费用' ? 'Course Fee' : item.name === '教材费用' ? 'Material Fee' : item.name}</span>
+                                <span className="text-gray-600">{item.name}</span>
                                 <span className="text-gray-900">HKD {item.amount}</span>
                               </div>
                             ))}

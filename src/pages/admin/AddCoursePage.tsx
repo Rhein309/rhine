@@ -17,17 +17,17 @@ const AddCoursePage = () => {
   const [teachers, setTeachers] = useState<{id: number, name: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 从API获取位置数据
+  // Get location data from API
   const [locations, setLocations] = useState<{id: string, name: string}[]>([]);
   
   useEffect(() => {
-    // 获取教师数据
+    // Fetch teacher data
     const fetchTeachers = async () => {
       try {
         const response = await fetch('http://localhost:9999/teachers');
         if (response.ok) {
           const data = await response.json();
-          // 将教师数据转换为需要的格式
+          // Convert teacher data to required format
           const formattedTeachers = data.map((teacher: any) => ({
             id: teacher.id,
             name: teacher.name
@@ -41,7 +41,7 @@ const AddCoursePage = () => {
       }
     };
 
-    // 获取位置数据
+    // Fetch location data
     const fetchLocations = async () => {
       try {
         const response = await fetch('http://localhost:9999/locations');

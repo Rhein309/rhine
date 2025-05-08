@@ -74,14 +74,14 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           
           // Build class data
           const formattedClasses = await Promise.all(response.data.map(async (course: any) => {
-            // 为每个课程获取学生信息
+            // Get student info for each course
             let students: Student[] = [];
             try {
               const studentsResponse = await axios.get(`http://localhost:9999/course-students/${course.id}`);
               students = studentsResponse.data;
             } catch (error) {
-              console.error(`获取课程 ${course.id} 的学生信息失败:`, error);
-              students = []; // 如果获取失败，使用空数组
+              console.error(`Failed to get students for course ${course.id}:`, error);
+              students = []; // Use empty array if failed
             }
             
             return {
@@ -185,13 +185,13 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             }
           }
           
-          // 检查是否有选中的学生
+          // Check if at least one student is selected
           const selectedStudentIds = Object.entries(selectedStudents)
             .filter(([_, isSelected]) => isSelected)
             .map(([id, _]) => id);
             
           if (selectedStudentIds.length === 0) {
-            alert('请至少选择一名学生进行考勤记录。');
+            alert('Please select at least one student to record attendance.');
             setSubmitting(false);
             return;
           }
@@ -199,7 +199,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           const records = Object.entries(attendanceData)
             .filter(([studentId, data]) =>
               selectedStudents[studentId] && data.status !== null
-            ) // 只提交被选中且有状态的学生记录
+            ) // Only submit records for selected students with status
             .map(([studentId, data]) => {
               const student = selectedClass?.students.find(s => s.id.toString() === studentId);
               
@@ -217,7 +217,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             });
           
           if (records.length === 0) {
-            alert('没有可提交的考勤记录。请为至少一名选中的学生标记出勤状态。');
+            alert('No attendance records to submit. Please mark attendance status for at least one selected student.');
             setSubmitting(false);
             return;
           }
@@ -305,14 +305,14 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                         acc[student.id] = {
                           status: null,
                           notes: '',
-                          arrivalTime: format(new Date(), 'HH:mm'),  // 默认设置为当前时间
+                          arrivalTime: format(new Date(), 'HH:mm'),  // Default to current time
                           leavingTime: ''
                         };
                         return acc;
                       }, {});
                       setAttendanceData(initialData);
                       
-                      // 初始化所有学生为未选中状态
+                      // Initialize all students as unselected
                       const initialSelectedStudents = class_.students.reduce((acc: any, student: any) => {
                         acc[student.id] = false;
                         return acc;
@@ -352,9 +352,9 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
 
       {selectedClass && !loading && (
         <>
-          {/* 学生选择区域 */}
+          {/* Student selection area */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">选择学生</h2>
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Select Students</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {selectedClass.students.map(student => (
                 <div key={student.id} className="flex items-center">
@@ -391,7 +391,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                 className="text-sm text-purple-600 hover:text-purple-800"
                 disabled={submitting}
               >
-                {Object.values(selectedStudents).every(v => v) ? '取消全选' : '全选'}
+                {Object.values(selectedStudents).every(v => v) ? 'Deselect All' : 'Select All'}
               </button>
             </div>
           </div>
