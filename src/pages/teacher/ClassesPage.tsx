@@ -52,15 +52,25 @@ const ClassesPage = () => {
         setCourses(formattedCourses);
         
         // 构建班级数据
-        // 注意：这里假设API返回的课程数据中包含了足够的信息来构建班级
-        // 实际应用中可能需要额外的API调用来获取班级和学生信息
-        const formattedClasses = response.data.map((course: any) => ({
-          id: course.id,
-          course: course.name,
-          schedule: course.schedule || 'N/A',
-          time: course.time || 'N/A',
-          location: course.location || 'N/A',
-          students: [] // 初始化为空数组，可能需要另一个API调用来获取学生信息
+        const formattedClasses = await Promise.all(response.data.map(async (course: any) => {
+          // 为每个课程获取学生信息
+          let students: Student[] = [];
+          try {
+            const studentsResponse = await axios.get(`http://localhost:9999/course-students/${course.id}`);
+            students = studentsResponse.data;
+          } catch (error) {
+            console.error(`获取课程 ${course.id} 的学生信息失败:`, error);
+            students = []; // 如果获取失败，使用空数组
+          }
+          
+          return {
+            id: course.id,
+            course: course.name,
+            schedule: course.schedule || 'N/A',
+            time: course.time || 'N/A',
+            location: course.location || 'N/A',
+            students: students
+          };
         }));
         
         setClasses(formattedClasses);

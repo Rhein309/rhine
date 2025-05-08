@@ -174,6 +174,9 @@ const ParentCoursesPage = () => {
         message: ''
       });
 
+      // 我们不需要传递学生ID，后端会根据家长ID创建或关联学生
+      let studentId = null;
+
       // Send enrollment request
       const response = await fetch('http://localhost:9999/enroll', {
         method: 'POST',
@@ -182,7 +185,8 @@ const ParentCoursesPage = () => {
         },
         body: JSON.stringify({
           courseId,
-          parentId: profile.id
+          parentId: profile.id,
+          studentId: studentId // 添加学生ID
         }),
       });
 
@@ -190,6 +194,8 @@ const ParentCoursesPage = () => {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Enrollment failed');
       }
+
+      const responseData = await response.json();
 
       // Enrollment success
       setEnrollmentStatus({
@@ -200,6 +206,13 @@ const ParentCoursesPage = () => {
       
       // Update enrolled course list
       setEnrolledCourseIds(prev => [...prev, courseId]);
+      
+      // 如果响应中包含学生ID，记录下来
+      if (responseData.studentId) {
+        console.log('Student ID from enrollment:', responseData.studentId);
+        // 注意：如果需要在应用中保存这个学生ID，你需要修改AuthContext中的Profile接口
+        // 并添加相应的更新逻辑
+      }
     } catch (err: any) {
       console.error('Error enrolling course:', err);
       setEnrollmentStatus({

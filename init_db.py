@@ -25,10 +25,19 @@ def init_database():
         )
         cursor = connection.cursor()
         
+        # 删除现有表（如果存在）
+        cursor.execute("DROP TABLE IF EXISTS grades")
+        cursor.execute("DROP TABLE IF EXISTS students")
+        cursor.execute("DROP TABLE IF EXISTS student_course")
+        cursor.execute("DROP TABLE IF EXISTS enrollments")
+        cursor.execute("DROP TABLE IF EXISTS courses")
+        
+        print("已删除现有表")
+        
         # 创建课程表
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS courses (
-            id VARCHAR(50) PRIMARY KEY,
+            id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             schedule VARCHAR(100),
             time VARCHAR(100),
@@ -44,7 +53,7 @@ def init_database():
             age INT NOT NULL,
             parent VARCHAR(100) NOT NULL,
             contact VARCHAR(50) NOT NULL,
-            course_id VARCHAR(50),
+            course_id INT,
             FOREIGN KEY (course_id) REFERENCES courses(id)
         )
         """)
@@ -55,7 +64,7 @@ def init_database():
             id INT AUTO_INCREMENT PRIMARY KEY,
             date DATE NOT NULL,
             course VARCHAR(100) NOT NULL,
-            course_id VARCHAR(50) NOT NULL,
+            course_id INT NOT NULL,
             type ENUM('quiz', 'exam', 'assignment', 'homework') NOT NULL,
             title VARCHAR(255) NOT NULL,
             student VARCHAR(100) NOT NULL,
@@ -69,26 +78,36 @@ def init_database():
         
         # 插入示例课程数据
         courses = [
-            ('phonics', 'Phonics Foundation', 'Mon, Wed, Fri', '10:00 AM - 11:00 AM', 'Room 101'),
-            ('readers', 'Young Readers', 'Tue, Thu', '11:30 AM - 12:30 PM', 'Online')
+            ('Phonics Foundation', 'Mon, Wed, Fri', '10:00 AM - 11:00 AM', 'Room 101'),
+            ('Young Readers', 'Tue, Thu', '11:30 AM - 12:30 PM', 'Online')
         ]
+        
+        course_ids = {}  # 用于存储课程名称和ID的映射
         
         for course in courses:
             try:
                 cursor.execute("""
-                INSERT INTO courses (id, name, schedule, time, location)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO courses (name, schedule, time, location)
+                VALUES (%s, %s, %s, %s)
                 """, course)
+                # 获取自动生成的ID
+                course_id = cursor.lastrowid
+                course_ids[course[0]] = course_id
             except pymysql.err.IntegrityError:
-                print(f"课程 {course[1]} 已存在，跳过插入")
+                print(f"课程 {course[0]} 已存在，跳过插入")
+                # 查询已存在课程的ID
+                cursor.execute("SELECT id FROM courses WHERE name = %s", (course[0],))
+                result = cursor.fetchone()
+                if result:
+                    course_ids[course[0]] = result['id']
         
         # 插入示例学生数据
         students = [
-            (1, 'Emily Wong', 7, 'Sarah Wong', '+852 9876 5432', 'phonics'),
-            (2, 'Thomas Chan', 6, 'David Chan', '+852 9876 1234', 'phonics'),
-            (3, 'Sophie Lee', 7, 'Michelle Lee', '+852 9876 7890', 'phonics'),
-            (4, 'Jason Lam', 8, 'Peter Lam', '+852 9876 4321', 'readers'),
-            (5, 'Alice Chen', 8, 'Mary Chen', '+852 9876 8765', 'readers')
+            (1, 'Emily Wong', 7, 'Sarah Wong', '+852 9876 5432', course_ids.get('Phonics Foundation')),
+            (2, 'Thomas Chan', 6, 'David Chan', '+852 9876 1234', course_ids.get('Phonics Foundation')),
+            (3, 'Sophie Lee', 7, 'Michelle Lee', '+852 9876 7890', course_ids.get('Phonics Foundation')),
+            (4, 'Jason Lam', 8, 'Peter Lam', '+852 9876 4321', course_ids.get('Young Readers')),
+            (5, 'Alice Chen', 8, 'Mary Chen', '+852 9876 8765', course_ids.get('Young Readers'))
         ]
         
         for student in students:
@@ -102,8 +121,8 @@ def init_database():
         
         # 插入示例成绩数据
         grades = [
-            ('2025-01-15', 'Phonics Foundation', 'phonics', 'quiz', 'Week 3 Quiz', 'Emily Wong', 1, 95, 100, 'Excellent understanding of short vowel sounds'),
-            ('2025-01-14', 'Young Readers', 'readers', 'homework', 'Reading Comprehension Exercise', 'Thomas Chan', 2, 85, 100, 'Good work on main idea identification')
+            ('2025-01-15', 'Phonics Foundation', course_ids.get('Phonics Foundation'), 'quiz', 'Week 3 Quiz', 'Emily Wong', 1, 95, 100, 'Excellent understanding of short vowel sounds'),
+            ('2025-01-14', 'Young Readers', course_ids.get('Young Readers'), 'homework', 'Reading Comprehension Exercise', 'Thomas Chan', 2, 85, 100, 'Good work on main idea identification')
         ]
         
         for grade in grades:

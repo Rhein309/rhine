@@ -4,7 +4,7 @@ USE project;
 
 -- 创建课程表
 CREATE TABLE IF NOT EXISTS courses (
-    id VARCHAR(50) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     schedule VARCHAR(100),
     time VARCHAR(100),
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS students (
     age INT NOT NULL,
     parent VARCHAR(100) NOT NULL,
     contact VARCHAR(50) NOT NULL,
-    course_id VARCHAR(50),
+    course_id INT,
     FOREIGN KEY (course_id) REFERENCES courses(id)
 );
 

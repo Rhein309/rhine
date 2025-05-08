@@ -73,40 +73,28 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           setCourses(formattedCourses);
           
           // Build class data
-          const formattedClasses = response.data.map((course: any) => {
-            // Get students for this course
+          const formattedClasses = await Promise.all(response.data.map(async (course: any) => {
+            // 为每个课程获取学生信息
+            let students: Student[] = [];
+            try {
+              const studentsResponse = await axios.get(`http://localhost:9999/course-students/${course.id}`);
+              students = studentsResponse.data;
+            } catch (error) {
+              console.error(`获取课程 ${course.id} 的学生信息失败:`, error);
+              students = []; // 如果获取失败，使用空数组
+            }
+            
             return {
               id: course.id,
               course: course.name,
               schedule: course.schedule || 'N/A',
               time: course.time || 'N/A',
               location: course.location || 'N/A',
-              students: [] // Initialize as empty array, will fill later
+              students: students
             };
-          });
+          }));
           
-          // Fetch students and assign to classes
-          const studentsResponse = await axios.get('http://localhost:9999/students');
-          
-          // Update students in classes
-          const classesWithStudents = formattedClasses.map((class_: Class) => {
-            const classStudents = studentsResponse.data.filter((student: any) =>
-              student.courses.includes(class_.id.toString())
-            ).map((student: any) => ({
-              id: student.id,
-              name: student.name,
-              age: student.age,
-              parent: student.parent,
-              contact: student.contact
-            }));
-            
-            return {
-              ...class_,
-              students: classStudents
-            };
-          });
-          
-          setClasses(classesWithStudents);
+          setClasses(formattedClasses);
           setError(null);
         } catch (err) {
           console.error('Failed to fetch course data:', err);

@@ -1,148 +1,197 @@
-# 教育管理系统 - 成绩模块
+# Education Management System - Grades Module
 
-这个项目实现了一个教育管理系统的成绩管理模块，包括前端界面和后端API。
+This project implements a grades management module for an education management system, including a frontend interface and backend API.
 
-## 功能特点
+## Features
 
-- 查看学生成绩列表
-- 按课程、评估类型和学生名称筛选成绩
-- 添加单个学生成绩
-- 批量添加多个学生成绩
-- 成绩排序功能
+- View student grades list
+- Filter grades by course, assessment type, and student name
+- Add individual student grades
+- Batch add multiple student grades
+- Grade sorting functionality
 
-## 技术栈
+## Technology Stack
 
-- 前端：React + TypeScript + Tailwind CSS
-- 后端：Python Flask
-- 数据库：MySQL
+- Frontend: React + TypeScript + Tailwind CSS
+- Backend: Python Flask
+- Database: MySQL
 
-## 项目结构
+## Project Structure
 
 ```
-├── app.py                 # 后端Flask应用
-├── init_db.py             # 数据库初始化脚本
-├── test_api.py            # API测试脚本
+├── app.py                 # Backend Flask application
+├── init_db.py             # Database initialization script
+├── test_api.py            # API testing script
 └── src/
     └── pages/
         └── teacher/
-            └── GradesPage.tsx  # 成绩管理前端页面
+            └── GradesPage.tsx  # Grades management frontend page
 ```
 
-## 数据库设计
+## Database Design
 
-项目使用了以下数据表：
+The project uses the following database tables:
 
-1. **courses** - 存储课程信息
-   - id: 课程ID
-   - name: 课程名称
-   - schedule: 课程安排
-   - time: 上课时间
-   - location: 上课地点
+1. **courses** - Stores course information
+   - id: Course ID
+   - name: Course name
+   - schedule: Course schedule
+   - time: Class time
+   - location: Class location
 
-2. **students** - 存储学生信息
-   - id: 学生ID
-   - name: 学生姓名
-   - age: 学生年龄
-   - parent: 家长姓名
-   - contact: 联系方式
-   - course_id: 所属课程ID
+2. **students** - Stores student information
+   - id: Student ID
+   - name: Student name
+   - age: Student age
+   - parent: Parent name
+   - contact: Contact information
+   - course_id: Associated course ID
 
-3. **grades** - 存储成绩信息
-   - id: 成绩ID
-   - date: 评估日期
-   - course: 课程名称
-   - course_id: 课程ID
-   - type: 评估类型（quiz, exam, assignment, homework）
-   - title: 评估标题
-   - student: 学生姓名
-   - student_id: 学生ID
-   - score: 得分
-   - max_score: 满分
-   - feedback: 反馈意见
-   - created_at: 创建时间
+3. **grades** - Stores grade information
+   - id: Grade ID
+   - date: Assessment date
+   - course: Course name
+   - course_id: Course ID
+   - type: Assessment type (quiz, exam, assignment, homework)
+   - title: Assessment title
+   - student: Student name
+   - student_id: Student ID
+   - score: Score achieved
+   - max_score: Maximum possible score
+   - feedback: Feedback comments
+   - created_at: Creation timestamp
 
-## 安装与设置
+## Installation and Setup Guide
 
-### 前提条件
+This guide will help you set up the Education Management System - Grades Module on your computer.
+
+### Prerequisites
 
 - Python 3.8+
 - MySQL 5.7+
 - Node.js 14+
 - npm 6+
 
-### 后端设置
+### Step 1: Clone the Repository
 
-1. 安装Python依赖：
+```bash
+git clone <repository-url>
+cd education-management-system
+```
+
+### Step 2: Set Up the Backend
+
+1. Install Python dependencies:
 
 ```bash
 pip install flask flask-cors pymysql
 ```
 
-2. 配置数据库连接：
+2. Configure the database connection:
 
-编辑`app.py`中的`db_config`变量，设置正确的数据库连接信息：
+Edit the `db_config` variable in `app.py` to set the correct database connection information:
 
 ```python
 db_config = {
     'host': 'localhost',
     'user': 'root',
-    'port': 33066,  # 根据你的MySQL端口进行修改
-    'password': '',  # 设置你的MySQL密码
+    'port': 3306,  # Change to your MySQL port
+    'password': '',  # Set your MySQL password
     'database': 'project'
 }
 ```
 
-3. 初始化数据库：
+3. Create the MySQL database:
+
+```bash
+mysql -u root -p
+```
+
+In the MySQL shell:
+
+```sql
+CREATE DATABASE project;
+EXIT;
+```
+
+4. Initialize the database:
 
 ```bash
 python init_db.py
 ```
 
-4. 启动后端服务器：
+5. Start the backend server:
 
 ```bash
 python app.py
 ```
 
-服务器将在 http://localhost:9999 上运行。
+The server will run on http://localhost:9999.
 
-### 前端设置
+### Step 3: Set Up the Frontend
 
-1. 安装前端依赖：
+1. Install frontend dependencies:
 
 ```bash
 npm install
 ```
 
-2. 启动前端开发服务器：
+2. Configure the API endpoint:
+
+If your backend is running on a different host or port, update the API endpoint URLs in the frontend code. The main API calls are in `src/pages/teacher/GradesPage.tsx`.
+
+Look for lines like:
+```typescript
+const coursesResponse = await axios.get('http://localhost:9999/courses');
+```
+
+And update the URL if necessary.
+
+3. Start the frontend development server:
 
 ```bash
 npm run dev
 ```
 
-前端将在 http://localhost:5173 上运行。
+The frontend will run on http://localhost:5173.
 
-## API端点
+### Step 4: Verify the Setup
 
-### 获取课程列表
+1. Open your browser and navigate to http://localhost:5173
+2. Log in to the system (use test credentials if provided)
+3. Navigate to the Grades page to verify functionality
+
+### Step 5: Testing the API
+
+You can test the API endpoints using the provided test script:
+
+```bash
+python test_api.py
+```
+
+This will run a series of tests against the API endpoints to verify they are working correctly.
+
+## API Endpoints
+
+### Get Courses List
 
 ```
 GET /courses
 ```
 
-### 获取成绩列表
+### Get Grades List
 
 ```
 GET /grades
 ```
 
-### 添加单个成绩
+### Add Individual Grade
 
 ```
 POST /grades
 ```
 
-请求体示例：
+Request body example:
 
 ```json
 {
@@ -159,13 +208,13 @@ POST /grades
 }
 ```
 
-### 批量添加成绩
+### Batch Add Grades
 
 ```
 POST /grades/batch
 ```
 
-请求体示例：
+Request body example:
 
 ```json
 [
@@ -196,14 +245,54 @@ POST /grades/batch
 ]
 ```
 
-## 测试API
+## Troubleshooting
 
-使用提供的测试脚本测试API端点：
+### Database Connection Issues
+
+If you encounter database connection issues:
+
+1. Verify that MySQL is running on your system
+2. Check that the port number in `db_config` matches your MySQL configuration
+3. Ensure the username and password are correct
+4. Make sure the 'project' database exists
+
+### API Connection Issues
+
+If the frontend cannot connect to the backend:
+
+1. Verify that the backend server is running
+2. Check that the API URLs in the frontend code match the backend server address
+3. Ensure there are no firewall or network issues blocking the connection
+4. Check browser console for CORS-related errors
+
+### Frontend Build Issues
+
+If you encounter issues building or running the frontend:
+
+1. Make sure you have the correct versions of Node.js and npm installed
+2. Try deleting the `node_modules` folder and running `npm install` again
+3. Check for any TypeScript errors in the console
+
+## Production Deployment
+
+For production deployment:
+
+1. Build the frontend:
 
 ```bash
-python test_api.py
+npm run build
 ```
 
-## 许可证
+2. Serve the built files using a production web server like Nginx or Apache
+
+3. Configure the backend to run as a service using a tool like Supervisor, PM2, or systemd
+
+4. Set up a production-grade database server with proper security configurations
+
+5. Update the database connection settings in the backend code
+
+6. Consider using environment variables for sensitive configuration
+
+## License
 
 MIT

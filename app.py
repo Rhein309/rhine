@@ -1082,12 +1082,13 @@ def enroll_course():
         # Extract data from request
         course_id = data.get('courseId')
         parent_id = data.get('parentId')
+        student_id = data.get('studentId')  # 新增：学生ID
         
         if not course_id or not parent_id:
             return jsonify({"error": "Incorrect data format, missing courseId or parentId"}), 400
             
         # Print received data for debugging
-        print(f"Enrollment request - Course ID: {course_id}, Parent ID: {parent_id}")
+        print(f"Enrollment request - Course ID: {course_id}, Parent ID: {parent_id}, Student ID: {student_id}")
         
         # Connect to database
         connection = pymysql.connect(
@@ -1109,19 +1110,14 @@ def enroll_course():
             if not course:
                 return jsonify({"error": "Course does not exist"}), 404
                 
-            # Check if course is full
-            cursor.execute("SELECT COUNT(*) as count FROM students WHERE FIND_IN_SET(%s, courses)", (str(course_id),))
+            # 获取课程已报名学生数量
+            cursor.execute("SELECT COUNT(*) as count FROM student_course WHERE course_id = %s AND status = 'active'", (course_id,))
             enrolled_count = cursor.fetchone()['count']
             
             if enrolled_count >= course['max_students']:
                 return jsonify({"error": "Course is full"}), 400
             
-            # Create enrollment record
-            # Note: Here we create a new table to store enrollment information, rather than relying on a specific table structure
-            # First check if enrollments table exists, if not create it
-            # Note: enrollments table has already been created in init_db(), no need to create it again here
-            
-            # Check if already enrolled
+            # 检查是否已经报名
             cursor.execute("SELECT * FROM enrollments WHERE course_id = %s AND parent_id = %s",
                           (course_id, parent_id))
             existing_enrollment = cursor.fetchone()
@@ -1129,18 +1125,59 @@ def enroll_course():
             if existing_enrollment:
                 return jsonify({"error": "You have already enrolled in this course"}), 400
             
-            # Create new enrollment record
-            # Ensure parent_id is integer type
+            # 确保ID是整数类型
             try:
                 parent_id_int = int(parent_id)
+                course_id_int = int(course_id)
             except ValueError:
-                return jsonify({"error": "parentId must be an integer"}), 400
+                return jsonify({"error": "parentId and courseId must be integers"}), 400
+            
+            # 如果没有提供学生ID，则创建一个新学生
+            if not student_id:
+                # 获取家长信息，创建学生记录
+                cursor.execute("SELECT * FROM parent WHERE id = %s", (parent_id_int,))
+                parent = cursor.fetchone()
                 
-            cursor.execute("INSERT INTO enrollments (course_id, parent_id) VALUES (%s, %s)",
-                          (course_id, parent_id_int))
+                if not parent:
+                    return jsonify({"error": "Parent not found"}), 404
+                
+                # 创建学生记录
+                cursor.execute("""
+                INSERT INTO students (name, age, parent, contact, course_id)
+                VALUES (%s, %s, %s, %s, %s)
+                """, (
+                    parent.get('Child_Name', 'Unknown Child'),
+                    parent.get('Child_Age', 0),
+                    f"{parent.get('First_Name', '')} {parent.get('Last_Name', '')}",
+                    parent.get('Email_Address', 'No contact'),
+                    course_id
+                ))
+                
+                # 获取新创建的学生ID
+                student_id = cursor.lastrowid
+            else:
+                # 确保学生ID是整数
+                try:
+                    student_id = int(student_id)
+                except ValueError:
+                    return jsonify({"error": "studentId must be an integer"}), 400
+            
+            # 创建报名记录
+            cursor.execute("INSERT INTO enrollments (course_id, parent_id, student_id) VALUES (%s, %s, %s)",
+                          (course_id_int, parent_id_int, student_id))
+            
+            # 创建学生-课程关联记录
+            cursor.execute("""
+            INSERT INTO student_course (student_id, course_id)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE status = 'active'
+            """, (student_id, course_id_int))
             
             connection.commit()
-            return jsonify({"message": "Enrollment successful"}), 200
+            return jsonify({
+                "message": "Enrollment successful",
+                "studentId": student_id
+            }), 200
             
         except Exception as e:
             connection.rollback()
@@ -1222,6 +1259,56 @@ def get_user_enrollments():
             return jsonify({"error": f"Database error: {str(e)}"}), 500
         finally:
             # Close connection
+            cursor.close()
+            connection.close()
+            
+    except Exception as e:
+        print(f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+@app.route('/course-students/<int:course_id>', methods=['GET'])
+def get_course_students(course_id):
+    """获取特定课程的学生列表"""
+    try:
+        # 连接数据库
+        connection = pymysql.connect(
+            host=db_config['host'],
+            user=db_config['user'],
+            password=db_config['password'],
+            port=db_config['port'],
+            database=db_config['database'],
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'fake': True}
+        )
+        cursor = connection.cursor()
+        
+        try:
+            # 查询课程学生
+            sql = """
+            SELECT
+                s.id,
+                s.name,
+                s.age,
+                s.parent,
+                s.contact
+            FROM
+                students s
+            JOIN
+                student_course sc ON s.id = sc.student_id
+            WHERE
+                sc.course_id = %s
+                AND sc.status = 'active'
+            """
+            cursor.execute(sql, (course_id,))
+            students = cursor.fetchall()
+            
+            return jsonify(students), 200
+            
+        except Exception as e:
+            print(f"Database error: {str(e)}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
+        finally:
             cursor.close()
             connection.close()
             
