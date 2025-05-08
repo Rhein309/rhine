@@ -50,6 +50,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedStudents, setSelectedStudents] = useState<{[key: string]: boolean}>({});
 
   // Fetch course data from API
   useEffect(() => {
@@ -183,8 +184,34 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
         
         try {
           // Prepare data to submit
+          // Check if all students have a status
+          const studentsWithoutStatus = selectedClass?.students.filter(student =>
+            !attendanceData[student.id]?.status
+          );
+          
+          if (studentsWithoutStatus && studentsWithoutStatus.length > 0) {
+            const missingStudents = studentsWithoutStatus.map(s => s.name).join(', ');
+            if (!window.confirm(`The following students don't have an attendance status: ${missingStudents}. Do you want to continue anyway?`)) {
+              setSubmitting(false);
+              return;
+            }
+          }
+          
+          // 检查是否有选中的学生
+          const selectedStudentIds = Object.entries(selectedStudents)
+            .filter(([_, isSelected]) => isSelected)
+            .map(([id, _]) => id);
+            
+          if (selectedStudentIds.length === 0) {
+            alert('请至少选择一名学生进行考勤记录。');
+            setSubmitting(false);
+            return;
+          }
+          
           const records = Object.entries(attendanceData)
-            .filter(([_, data]) => data.status !== null) // Only submit records with a status
+            .filter(([studentId, data]) =>
+              selectedStudents[studentId] && data.status !== null
+            ) // 只提交被选中且有状态的学生记录
             .map(([studentId, data]) => {
               const student = selectedClass?.students.find(s => s.id.toString() === studentId);
               
@@ -202,7 +229,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             });
           
           if (records.length === 0) {
-            alert('No attendance records to submit. Please mark at least one student.');
+            alert('没有可提交的考勤记录。请为至少一名选中的学生标记出勤状态。');
             setSubmitting(false);
             return;
           }
@@ -210,11 +237,26 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           // Submit to API
           console.log('Submitting attendance data:', records);
           
-          const response = await axios.post('http://localhost:9999/attendance', records);
-          
-          if (response.status === 200) {
-            alert('Attendance records submitted successfully!');
-            onCancel(); // Return to main page after submit
+          try {
+            const response = await axios.post('http://localhost:9999/attendance', records);
+            
+            if (response.status === 200) {
+              alert('Attendance records submitted successfully!');
+              onCancel(); // Return to main page after submit
+            }
+          } catch (error: any) {
+            console.error('API error:', error);
+            if (error.response) {
+              // The request was made and the server responded with a status code
+              // that falls out of the range of 2xx
+              alert(`Failed to submit attendance records: ${error.response.data.error || error.message}`);
+            } else if (error.request) {
+              // The request was made but no response was received
+              alert('Failed to submit attendance records: No response from server. Please check your connection.');
+            } else {
+              // Something happened in setting up the request that triggered an Error
+              alert(`Failed to submit attendance records: ${error.message}`);
+            }
           }
         } catch (error) {
           console.error('Failed to submit attendance records:', error);
@@ -269,20 +311,28 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
                     const class_ = classes.find(c => c.id.toString() === e.target.value);
                     setSelectedClass(class_ || null);
                     
-                    // Initialize attendance data for all students
+                    // Initialize attendance data and selected students for all students
                     if (class_) {
                       const initialData = class_.students.reduce((acc: any, student: any) => {
                         acc[student.id] = {
                           status: null,
                           notes: '',
-                          arrivalTime: '',
+                          arrivalTime: format(new Date(), 'HH:mm'),  // 默认设置为当前时间
                           leavingTime: ''
                         };
                         return acc;
                       }, {});
                       setAttendanceData(initialData);
+                      
+                      // 初始化所有学生为未选中状态
+                      const initialSelectedStudents = class_.students.reduce((acc: any, student: any) => {
+                        acc[student.id] = false;
+                        return acc;
+                      }, {});
+                      setSelectedStudents(initialSelectedStudents);
                     } else {
                       setAttendanceData({});
+                      setSelectedStudents({});
                     }
                   }}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
@@ -313,7 +363,52 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
       )}
 
       {selectedClass && !loading && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <>
+          {/* 学生选择区域 */}
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">选择学生</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedClass.students.map(student => (
+                <div key={student.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`student-${student.id}`}
+                    checked={selectedStudents[student.id] || false}
+                    onChange={(e) => {
+                      setSelectedStudents(prev => ({
+                        ...prev,
+                        [student.id]: e.target.checked
+                      }));
+                    }}
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    disabled={submitting}
+                  />
+                  <label htmlFor={`student-${student.id}`} className="ml-2 block text-sm text-gray-900">
+                    {student.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex space-x-4">
+              <button
+                onClick={() => {
+                  const allSelected = Object.values(selectedStudents).every(v => v);
+                  const newState = !allSelected;
+                  const updatedSelectedStudents = Object.keys(selectedStudents).reduce((acc, studentId) => {
+                    acc[studentId] = newState;
+                    return acc;
+                  }, {} as {[key: string]: boolean});
+                  setSelectedStudents(updatedSelectedStudents);
+                }}
+                className="text-sm text-purple-600 hover:text-purple-800"
+                disabled={submitting}
+              >
+                {Object.values(selectedStudents).every(v => v) ? '取消全选' : '全选'}
+              </button>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="mb-4">
             <h2 className="text-lg font-medium text-gray-900">
               {selectedClass.course} • {selectedClass.schedule} • {selectedClass.time}
@@ -322,7 +417,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
           </div>
           
           <div className="space-y-6">
-            {selectedClass.students.map(student => (
+            {selectedClass.students.filter(student => selectedStudents[student.id]).map(student => (
               <div key={student.id} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <div className="mb-4 md:mb-0">
@@ -429,6 +524,7 @@ const TakeAttendance = ({ onCancel }: { onCancel: () => void }) => {
             </button>
           </div>
         </div>
+        </>
       )}
     </div>
   );
@@ -563,21 +659,50 @@ const AttendanceRecords = ({ onTakeAttendance }: { onTakeAttendance: () => void 
         const weekStart = format(startOfWeek(currentWeek, { locale: zhCN }), 'yyyy-MM-dd');
         const weekEnd = format(endOfWeek(currentWeek, { locale: zhCN }), 'yyyy-MM-dd');
         
-        const response = await axios.get('http://localhost:9999/attendance', {
-          params: {
-            dateFrom: weekStart,
-            dateTo: weekEnd,
-            courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
-            studentId: selectedStudent !== 'all' ? selectedStudent : undefined,
-            status: selectedStatus !== 'all' ? selectedStatus : undefined
+        try {
+          const response = await axios.get('http://localhost:9999/attendance', {
+            params: {
+              dateFrom: weekStart,
+              dateTo: weekEnd,
+              courseId: selectedCourse !== 'all' ? selectedCourse : undefined,
+              studentId: selectedStudent !== 'all' ? selectedStudent : undefined,
+              status: selectedStatus !== 'all' ? selectedStatus : undefined
+            }
+          });
+          
+          setAttendanceRecords(response.data);
+          setError(null);
+        } catch (error: any) {
+          console.error('Failed to fetch attendance data:', error);
+          
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            setError(`Failed to fetch attendance data: ${error.response.data.error || error.message}`);
+          } else if (error.request) {
+            // The request was made but no response was received
+            setError('Failed to fetch attendance data: No response from server. Please check your connection.');
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            setError(`Failed to fetch attendance data: ${error.message}`);
           }
-        });
-        
-        setAttendanceRecords(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch attendance data:', err);
-        setError('Failed to fetch attendance data');
+          
+          // Use default data if API fails
+          const defaultAttendanceRecords = [
+            {
+              id: 1,
+              date: format(new Date(), 'yyyy-MM-dd'),
+              course: 'Phonics Foundation',
+              student: 'Emily Wong',
+              status: 'present' as const,
+              arrivalTime: '09:55 AM',
+              leavingTime: '11:00 AM',
+              notes: 'Active participation in class'
+            }
+          ];
+          
+          setAttendanceRecords(defaultAttendanceRecords);
+        }
       } finally {
         setLoading(false);
       }
